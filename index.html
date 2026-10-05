@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#102b46">
+  <meta name="description" content="Maply — дорожные события на карте">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Maply">
+  <title>Maply — карта событий</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/png" href="/api/icon?size=192">
+  <link rel="apple-touch-icon" href="/api/icon?size=192">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="/style.css">
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.js"></script>
+  <script defer src="/app.js"></script>
+</head>
+<body>
+  <div id="map" aria-label="Карта дорожных событий"></div>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Maply, главная"><span class="brand-mark">M</span>Maply</a>
+    <button id="account" class="compact" type="button">Войти</button>
+  </header>
+  <div id="status" class="status" role="status" aria-live="polite">Загрузка карты…</div>
+  <div class="map-tools">
+    <button id="locate" type="button" aria-label="Показать моё местоположение" title="Моё местоположение">◎</button>
+    <button id="refresh" type="button" aria-label="Обновить метки" title="Обновить метки">↻</button>
+  </div>
+  <div id="placement" class="placement" hidden>
+    <p>Нажми на карту в месте события</p>
+    <button id="cancel-placement" type="button">Отмена</button>
+  </div>
+  <footer class="bottom-bar">
+    <p><span id="count">0</span> меток в этой области <span class="dot">·</span> за 24 часа</p>
+    <button id="add" class="primary" type="button">＋ Добавить метку</button>
+    <button id="install" class="install" type="button" hidden>Установить Maply</button>
+  </footer>
+  <dialog id="auth-dialog" aria-labelledby="auth-title">
+    <div class="dialog-heading"><h1 id="auth-title">Вход в Maply</h1><button class="close" data-close="auth-dialog" aria-label="Закрыть" type="button">×</button></div>
+    <div id="signed-in" hidden><p>Ты вошёл как <strong id="user-email"></strong></p><button id="logout" type="button">Выйти</button></div>
+    <form id="auth-form">
+      <p>Войди, чтобы добавлять метки и удалять свои.</p>
+      <label for="email">Email</label><input id="email" type="email" autocomplete="email" required maxlength="254">
+      <label for="password">Пароль</label><input id="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128">
+      <p class="small">Минимум 8 символов.</p>
+      <button id="auth-submit" class="primary" type="submit">Войти</button>
+      <button id="auth-switch" class="text-button" type="button">Нет аккаунта? Зарегистрироваться</button>
+    </form>
+    <p id="auth-message" class="message" role="status"></p>
+  </dialog>
+  <dialog id="pin-dialog" aria-labelledby="pin-title">
+    <div class="dialog-heading"><h1 id="pin-title">Новая метка</h1><button class="close" data-close="pin-dialog" aria-label="Закрыть" type="button">×</button></div>
+    <form id="pin-form">
+      <p id="coordinates" class="small"></p>
+      <label for="type">Что произошло?</label>
+      <select id="type" required>
+        <option value="accident">🚗 Авария</option>
+        <option value="closed">⛔ Дорога закрыта</option>
+        <option value="police">🚓 Полиция</option>
+        <option value="pothole">🕳️ Яма</option>
+        <option value="custom">📍 Своя метка</option>
+      </select>
+      <label for="title">Название</label><input id="title" maxlength="80" placeholder="Например: глубокая яма у светофора">
+      <label for="description">Подробности <span class="small">(необязательно)</span></label><textarea id="description" maxlength="300" rows="3" placeholder="Что нужно знать другим? Не указывай личные данные."></textarea>
+      <p class="small">Метка будет видна 24 часа.</p>
+      <button id="pin-submit" class="primary" type="submit">Опубликовать метку</button>
+    </form>
+    <p id="pin-message" class="message" role="status"></p>
+  </dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <noscript><div class="fatal">Для карты включи JavaScript в браузере.</div></noscript>
+</body>
+</html>
