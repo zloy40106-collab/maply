@@ -12,10 +12,10 @@
   <link rel="icon" type="image/png" href="/api/icon?size=192">
   <link rel="apple-touch-icon" href="/api/icon?size=192">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="/style.css?v=maply-votes-1">
+  <link rel="stylesheet" href="/style.css?v=maply-filters-1">
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.js"></script>
-  <script defer src="/app.js?v=maply-votes-1"></script>
+  <script defer src="/app.js?v=maply-filters-1"></script>
 </head>
 <body>
   <div id="map" aria-label="Карта дорожных событий"></div>
@@ -23,6 +23,14 @@
     <a class="brand" href="/" aria-label="Maply, главная"><span class="brand-mark">M</span>Maply</a>
     <button id="account" class="compact" type="button">Войти</button>
   </header>
+  <nav id="event-filters" class="event-filters" aria-label="Фильтр дорожных событий">
+    <button type="button" class="filter-button selected" data-filter="all" aria-pressed="true">Все</button>
+    <button type="button" class="filter-button" data-filter="accident" aria-pressed="false"><span aria-hidden="true">🚗</span> Аварии</button>
+    <button type="button" class="filter-button" data-filter="closed" aria-pressed="false"><span aria-hidden="true">⛔</span> Перекрытия</button>
+    <button type="button" class="filter-button" data-filter="police" aria-pressed="false"><span aria-hidden="true">🚓</span> Полиция</button>
+    <button type="button" class="filter-button" data-filter="pothole" aria-pressed="false"><span aria-hidden="true">🕳️</span> Ямы</button>
+    <button type="button" class="filter-button" data-filter="custom" aria-pressed="false"><span aria-hidden="true">📍</span> Своя метка</button>
+  </nav>
   <div id="status" class="status" role="status" aria-live="polite">Загрузка карты…</div>
   <div class="map-tools">
     <button id="locate" type="button" aria-label="Показать моё местоположение" title="Моё местоположение">◎</button>
@@ -33,7 +41,7 @@
     <button id="cancel-placement" type="button">Отмена</button>
   </div>
   <footer class="bottom-bar">
-    <p><span id="count">0</span> меток в этой области <span class="dot">·</span> актуальные события</p>
+    <p aria-live="polite" aria-atomic="true"><span id="count">0</span> <span id="count-caption">меток в этой области</span> <span class="dot">·</span> <span id="filter-caption">все события</span></p>
     <button id="add" class="primary" type="button">＋ Добавить метку</button>
     <button id="install" class="install" type="button" hidden>Установить Maply</button>
   </footer>
