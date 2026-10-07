@@ -302,13 +302,73 @@
   });
   window.addEventListener('appinstalled',() => {$('install').hidden = true;});
 
+  function loadMapResource(kind,url) {
+    return new Promise((resolve,reject) => {
+      const node = document.createElement(kind === 'script' ? 'script' : 'link');
+      if (kind === 'script') {node.src = url; node.async = true;}
+      else {node.rel = 'stylesheet'; node.href = url;}
+      const timer = setTimeout(() => {
+        node.onload = node.onerror = null; node.remove(); reject(new Error('MAPLY_MAP_RESOURCE_TIMEOUT'));
+      },15000);
+      node.onload = () => {clearTimeout(timer); resolve();};
+      node.onerror = () => {clearTimeout(timer); node.remove(); reject(new Error('MAPLY_MAP_RESOURCE_FAILED'));};
+      document.head.append(node);
+    });
+  }
+  async function initBasemap() {
+    // Keep a usable base map while the vector renderer loads, or if WebGL is unavailable.
+    const fallback = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
+      maxZoom:19
+    }).addTo(map);
+    let modern;
+    try {
+      await Promise.all([
+        loadMapResource('style','https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.css'),
+        loadMapResource('script','https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.js')
+      ]);
+      if (!window.maplibregl?.supported()) throw new Error('MAPLY_WEBGL_UNAVAILABLE');
+      await loadMapResource('script','https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js');
+      modern = L.maplibreGL({
+        style:'https://tiles.openfreemap.org/styles/liberty',
+        interactive:false,
+        renderWorldCopies:true,
+        attribution:'<a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a> &copy; <a href="https://openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'
+      }).addTo(map);
+      modern.getContainer().style.visibility = 'hidden';
+      const gl = modern.getMaplibreMap();
+      await new Promise((resolve,reject) => {
+        const cleanup = () => {clearTimeout(timer); gl.off('load',ready); gl.off('error',failed);};
+        const ready = () => {cleanup(); resolve();};
+        const failed = () => {cleanup(); reject(new Error('MAPLY_VECTOR_MAP_FAILED'));};
+        const timer = setTimeout(failed,20000);
+        gl.once('load',ready); gl.once('error',failed);
+        if (gl.loaded()) ready();
+      });
+      modern.getContainer().style.visibility = '';
+      map.removeLayer(fallback);
+      gl.getCanvas().addEventListener('webglcontextlost',() => {
+        // Let MapLibre restore its context, and show the raster map meanwhile.
+        if (!map.hasLayer(fallback)) fallback.addTo(map);
+        modern.getContainer().style.visibility = 'hidden';
+      });
+      gl.getCanvas().addEventListener('webglcontextrestored',() => {
+        gl.once('idle',() => {
+          modern.getContainer().style.visibility = '';
+          if (map.hasLayer(fallback)) map.removeLayer(fallback);
+        });
+      });
+    } catch (error) {
+      if (modern && map.hasLayer(modern)) map.removeLayer(modern);
+      toast('\u0421\u043e\u0432\u0440\u0435\u043c\u0435\u043d\u043d\u0430\u044f \u043a\u0430\u0440\u0442\u0430 \u043f\u043e\u043a\u0430 \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u043d\u0430. \u041f\u043e\u043a\u0430\u0437\u044b\u0432\u0430\u0435\u043c \u043e\u0431\u044b\u0447\u043d\u0443\u044e \u043a\u0430\u0440\u0442\u0443.');
+    }
+  }
+
   async function init() {
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => toast('\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0432\u043a\u043b\u044e\u0447\u0438\u0442\u044c \u0443\u0441\u0442\u0430\u043d\u043e\u0432\u043a\u0443 \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u044f. \u041a\u0430\u0440\u0442\u0430 \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442 \u0432 \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0435.'));
     if (!window.L) {status('\u041a\u0430\u0440\u0442\u0430 \u043d\u0435 \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u043b\u0430\u0441\u044c. \u041f\u0440\u043e\u0432\u0435\u0440\u044c \u0438\u043d\u0442\u0435\u0440\u043d\u0435\u0442 \u0438 \u043e\u0431\u043d\u043e\u0432\u0438 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0443.',true);return;}
-    map = L.map('map',{zoomControl:false,worldCopyJump:true,minZoom:3,maxZoom:19,maxBounds:[[-85.05112878,-540],[85.05112878,540]]}).setView([41.0082,28.9784],12);
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
-      attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',maxZoom:19
-    }).addTo(map);
+    map = L.map('map',{zoomControl:false,worldCopyJump:true,minZoom:3,maxZoom:19,maxBoundsViscosity:1,maxBounds:[[-85.05112878,-540],[85.05112878,540]]}).setView([41.0082,28.9784],12);
+    initBasemap();
     L.control.zoom({position:'bottomleft'}).addTo(map);
     layer = L.layerGroup().addTo(map);
     map.on('moveend',scheduleLoad);
