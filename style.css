@@ -21,3 +21,9 @@ dialog{border:0;border-radius:24px;padding:24px;width:min(440px,calc(100% - 24px
 @media(max-height:550px){.event-filters{top:calc(74px + env(safe-area-inset-top))}.status{top:calc(134px + env(safe-area-inset-top));font-size:12px;padding:6px 10px}}
 
 .event-filters::-webkit-scrollbar{display:none}
+
+/* Keep map credits above the mobile footer, away from the side buttons. */
+@media(max-width:639px){
+  .leaflet-bottom.leaflet-right{bottom:calc(178px + env(safe-area-inset-bottom));left:76px;right:76px}
+  .leaflet-bottom.leaflet-right .leaflet-control-attribution{float:none;width:fit-content;max-width:100%;margin:0 auto!important;padding:3px 6px!important;border-radius:7px;font-size:10px!important;line-height:1.35;text-align:center;white-space:normal;overflow-wrap:anywhere;background:rgba(255,255,255,.9)}
+}
