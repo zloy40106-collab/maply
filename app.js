@@ -327,7 +327,7 @@
         loadMapResource('style','https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.css'),
         loadMapResource('script','https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.js')
       ]);
-      if (!window.maplibregl?.supported()) throw new Error('MAPLY_WEBGL_UNAVAILABLE');
+      if (typeof window.maplibregl?.Map !== 'function') throw new Error('MAPLY_MAP_LIBRARY_UNAVAILABLE');
       await loadMapResource('script','https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js');
       modern = L.maplibreGL({
         style:'https://tiles.openfreemap.org/styles/liberty',
@@ -359,6 +359,7 @@
         });
       });
     } catch (error) {
+      console.warn('Maply basemap:',error);
       if (modern && map.hasLayer(modern)) map.removeLayer(modern);
       toast('\u0421\u043e\u0432\u0440\u0435\u043c\u0435\u043d\u043d\u0430\u044f \u043a\u0430\u0440\u0442\u0430 \u043f\u043e\u043a\u0430 \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u043d\u0430. \u041f\u043e\u043a\u0430\u0437\u044b\u0432\u0430\u0435\u043c \u043e\u0431\u044b\u0447\u043d\u0443\u044e \u043a\u0430\u0440\u0442\u0443.');
     }
