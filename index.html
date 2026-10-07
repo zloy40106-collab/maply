@@ -12,10 +12,10 @@
   <link rel="icon" type="image/png" href="/api/icon?size=192">
   <link rel="apple-touch-icon" href="/api/icon?size=192">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/style.css?v=maply-votes-1">
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.js"></script>
-  <script defer src="/app.js"></script>
+  <script defer src="/app.js?v=maply-votes-1"></script>
 </head>
 <body>
   <div id="map" aria-label="Карта дорожных событий"></div>
@@ -33,7 +33,7 @@
     <button id="cancel-placement" type="button">Отмена</button>
   </div>
   <footer class="bottom-bar">
-    <p><span id="count">0</span> меток в этой области <span class="dot">·</span> за 24 часа</p>
+    <p><span id="count">0</span> меток в этой области <span class="dot">·</span> актуальные события</p>
     <button id="add" class="primary" type="button">＋ Добавить метку</button>
     <button id="install" class="install" type="button" hidden>Установить Maply</button>
   </footer>
@@ -41,7 +41,7 @@
     <div class="dialog-heading"><h1 id="auth-title">Вход в Maply</h1><button class="close" data-close="auth-dialog" aria-label="Закрыть" type="button">×</button></div>
     <div id="signed-in" hidden><p>Ты вошёл как <strong id="user-email"></strong></p><button id="logout" type="button">Выйти</button></div>
     <form id="auth-form">
-      <p>Войди, чтобы добавлять метки и удалять свои.</p>
+      <p>Войди, чтобы добавлять метки, голосовать и удалять свои.</p>
       <label for="email">Email</label><input id="email" type="email" autocomplete="email" required maxlength="254">
       <label for="password">Пароль</label><input id="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128">
       <p class="small">Минимум 8 символов.</p>
@@ -64,7 +64,7 @@
       </select>
       <label for="title">Название</label><input id="title" maxlength="80" placeholder="Например: глубокая яма у светофора">
       <label for="description">Подробности <span class="small">(необязательно)</span></label><textarea id="description" maxlength="300" rows="3" placeholder="Что нужно знать другим? Не указывай личные данные."></textarea>
-      <p class="small">Метка будет видна 24 часа.</p>
+      <p class="small">Метка будет видна 24 часа. Первое «Ещё актуально» от каждого пользователя добавит 2 часа. При перевесе «Уже нет» на 3 метка скрывается.</p>
       <button id="pin-submit" class="primary" type="submit">Опубликовать метку</button>
     </form>
     <p id="pin-message" class="message" role="status"></p>
