@@ -2,11 +2,11 @@
 (() => {
   const $ = id => document.getElementById(id);
   const TYPES = {
-    accident: {name:'ĞĞ²Ğ°Ñ€Ğ¸Ñ',emoji:'ğŸš—',color:'#dc4949'},
-    closed: {name:'Ğ”Ğ¾Ñ€Ğ¾Ğ³Ğ° Ğ·Ğ°ĞºÑ€Ñ‹Ñ‚Ğ°',emoji:'â›”',color:'#dc7133'},
-    police: {name:'ĞŸĞ¾Ğ»Ğ¸Ñ†Ğ¸Ñ',emoji:'ğŸš“',color:'#397dc5'},
-    pothole: {name:'Ğ¯Ğ¼Ğ°',emoji:'ğŸ•³ï¸',color:'#927129'},
-    custom: {name:'Ğ¡Ğ²Ğ¾Ñ Ğ¼ĞµÑ‚ĞºĞ°',emoji:'ğŸ“',color:'#07887f'}
+    accident: {name:'\u0410\u0432\u0430\u0440\u0438\u044f',emoji:'\ud83d\ude97',color:'#dc4949'},
+    closed: {name:'\u0414\u043e\u0440\u043e\u0433\u0430 \u0437\u0430\u043a\u0440\u044b\u0442\u0430',emoji:'\u26d4',color:'#dc7133'},
+    police: {name:'\u041f\u043e\u043b\u0438\u0446\u0438\u044f',emoji:'\ud83d\ude93',color:'#397dc5'},
+    pothole: {name:'\u042f\u043c\u0430',emoji:'\ud83d\udd73\ufe0f',color:'#927129'},
+    custom: {name:'\u0421\u0432\u043e\u044f \u043c\u0435\u0442\u043a\u0430',emoji:'\ud83d\udccd',color:'#07887f'}
   };
   let map, db, user = null, layer, locationLayer;
   let placing = false, selectedPoint = null, signingUp = false;
@@ -26,36 +26,36 @@
   }
   function errorText(error) {
     const text = String(error?.message || error || '');
-    if (text.includes('MAPLY_MARKER_UNAVAILABLE')) return 'ĞœĞµÑ‚ĞºĞ° ÑƒĞ¶Ğµ ÑĞºÑ€Ñ‹Ñ‚Ğ°, ÑƒĞ´Ğ°Ğ»ĞµĞ½Ğ° Ğ¸Ğ»Ğ¸ ĞµÑ‘ ÑÑ€Ğ¾Ğº Ğ¸ÑÑ‚Ñ‘Ğº.';
-    if (text.includes('MAPLY_INVALID_VOTE')) return 'ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ñ€Ğ°ÑĞ¿Ğ¾Ğ·Ğ½Ğ°Ñ‚ÑŒ Ğ³Ğ¾Ğ»Ğ¾Ñ. ĞĞ±Ğ½Ğ¾Ğ²Ğ¸ ÑÑ‚Ñ€Ğ°Ğ½Ğ¸Ñ†Ñƒ.';
-    if (text.includes('maply_vote') || text.includes('maply_votes') || text.includes('active_votes') || text.includes('hidden_by_votes') || error?.code === 'PGRST202') return 'Ğ“Ğ¾Ğ»Ğ¾ÑĞ¾Ğ²Ğ°Ğ½Ğ¸Ğµ ĞµÑ‰Ñ‘ Ğ½Ğµ Ğ½Ğ°ÑÑ‚Ñ€Ğ¾ĞµĞ½Ğ¾. Ğ’Ñ‹Ğ¿Ğ¾Ğ»Ğ½Ğ¸ 1-SQL-golosovanie.sql Ğ² Supabase SQL Editor.';
-    if (text.includes('MAPLY_RATE_LIMIT')) return 'Ğ—Ğ° Ñ‡Ğ°Ñ Ğ¼Ğ¾Ğ¶Ğ½Ğ¾ Ğ´Ğ¾Ğ±Ğ°Ğ²Ğ¸Ñ‚ÑŒ 20 Ğ¼ĞµÑ‚Ğ¾Ğº. ĞŸĞ¾Ğ¿Ñ€Ğ¾Ğ±ÑƒĞ¹ Ğ¿Ğ¾Ğ·Ğ¶Ğµ.';
-    if (text.includes('Invalid login credentials')) return 'ĞŸÑ€Ğ¾Ğ²ĞµÑ€ÑŒ email Ğ¸ Ğ¿Ğ°Ñ€Ğ¾Ğ»ÑŒ.';
-    if (text.includes('Email not confirmed')) return 'ĞŸĞ¾Ğ´Ñ‚Ğ²ĞµÑ€Ğ´Ğ¸ email Ğ¿Ğ¾ ÑÑÑ‹Ğ»ĞºĞµ Ğ² Ğ¿Ğ¸ÑÑŒĞ¼Ğµ, Ğ·Ğ°Ñ‚ĞµĞ¼ Ğ²Ğ¾Ğ¹Ğ´Ğ¸.';
-    if (text.includes('rate limit') || text.includes('security purposes')) return 'Ğ¡Ğ»Ğ¸ÑˆĞºĞ¾Ğ¼ Ğ¼Ğ½Ğ¾Ğ³Ğ¾ Ğ¿Ğ¾Ğ¿Ñ‹Ñ‚Ğ¾Ğº. ĞŸĞ¾Ğ´Ğ¾Ğ¶Ğ´Ğ¸ Ğ½ĞµÑĞºĞ¾Ğ»ÑŒĞºĞ¾ Ğ¼Ğ¸Ğ½ÑƒÑ‚.';
-    if (text.includes('email_address_not_authorized') || text.includes('Email address') && text.includes('not authorized')) return 'ĞÑ‚Ğ¿Ñ€Ğ°Ğ²ĞºĞ° Ğ¿Ğ¸ÑĞµĞ¼ Ğ½Ğ° ÑÑ‚Ğ¾Ñ‚ Ğ°Ğ´Ñ€ĞµÑ Ğ¿Ğ¾ĞºĞ° Ğ½Ğµ Ğ½Ğ°ÑÑ‚Ñ€Ğ¾ĞµĞ½Ğ°. Ğ’Ğ»Ğ°Ğ´ĞµĞ»ĞµÑ† Maply Ğ´Ğ¾Ğ»Ğ¶ĞµĞ½ Ğ¿Ğ¾Ğ´ĞºĞ»ÑÑ‡Ğ¸Ñ‚ÑŒ SMTP Ğ² Supabase.';
-    if (text.includes('Password')) return 'ĞŸĞ°Ñ€Ğ¾Ğ»ÑŒ Ğ½Ğµ Ğ¿Ğ¾Ğ´Ñ…Ğ¾Ğ´Ğ¸Ñ‚ Ñ‚Ñ€ĞµĞ±Ğ¾Ğ²Ğ°Ğ½Ğ¸ÑĞ¼. ĞŸĞ¾Ğ¿Ñ€Ğ¾Ğ±ÑƒĞ¹ Ğ±Ğ¾Ğ»ĞµĞµ Ğ´Ğ»Ğ¸Ğ½Ğ½Ñ‹Ğ¹ Ğ¿Ğ°Ñ€Ğ¾Ğ»ÑŒ.';
-    if (text.includes('already registered')) return 'Ğ­Ñ‚Ğ¾Ñ‚ email ÑƒĞ¶Ğµ Ğ·Ğ°Ñ€ĞµĞ³Ğ¸ÑÑ‚Ñ€Ğ¸Ñ€Ğ¾Ğ²Ğ°Ğ½. Ğ’Ñ‹Ğ±ĞµÑ€Ğ¸ Â«Ğ’Ğ¾Ğ¹Ñ‚Ğ¸Â».';
-    if (text.includes('Failed to fetch') || text.includes('NetworkError') || !navigator.onLine) return 'ĞĞµÑ‚ ÑĞ¾ĞµĞ´Ğ¸Ğ½ĞµĞ½Ğ¸Ñ. ĞŸÑ€Ğ¾Ğ²ĞµÑ€ÑŒ Ğ¸Ğ½Ñ‚ĞµÑ€Ğ½ĞµÑ‚ Ğ¸ Ğ¿Ğ¾Ğ¿Ñ€Ğ¾Ğ±ÑƒĞ¹ ÑĞ½Ğ¾Ğ²Ğ°.';
-    if (text.includes('maply_markers') || error?.code === 'PGRST205') return 'Ğ¢Ğ°Ğ±Ğ»Ğ¸Ñ†Ğ° Maply ĞµÑ‰Ñ‘ Ğ½Ğµ Ğ³Ğ¾Ñ‚Ğ¾Ğ²Ğ°. Ğ’Ñ‹Ğ¿Ğ¾Ğ»Ğ½Ğ¸ Ğ¸ÑÑ…Ğ¾Ğ´Ğ½Ñ‹Ğ¹ 0-SQL-dlya-Supabase.sql Ğ² Supabase SQL Editor.';
-    if (error?.code === '42501' || text.includes('JWT') || text.includes('MAPLY_LOGIN_REQUIRED')) return 'ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ¿Ğ¾Ğ´Ñ‚Ğ²ĞµÑ€Ğ´Ğ¸Ñ‚ÑŒ Ğ²Ñ…Ğ¾Ğ´. Ğ’Ñ‹Ğ¹Ğ´Ğ¸ Ğ¸ Ğ²Ğ¾Ğ¹Ğ´Ğ¸ ÑĞ½Ğ¾Ğ²Ğ°. Ğ•ÑĞ»Ğ¸ Ğ¾ÑˆĞ¸Ğ±ĞºĞ° Ğ¾ÑÑ‚Ğ°Ñ‘Ñ‚ÑÑ, Ğ¿Ñ€Ğ¾Ğ²ĞµÑ€ÑŒ Ğ½Ğ°ÑÑ‚Ñ€Ğ¾Ğ¹ĞºĞ¸ Ğ±Ğ°Ğ·Ñ‹.';
-    return 'ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ²Ñ‹Ğ¿Ğ¾Ğ»Ğ½Ğ¸Ñ‚ÑŒ Ğ´ĞµĞ¹ÑÑ‚Ğ²Ğ¸Ğµ. ĞŸĞ¾Ğ¿Ñ€Ğ¾Ğ±ÑƒĞ¹ ÑĞ½Ğ¾Ğ²Ğ°. ' + text.slice(0,180);
+    if (text.includes('MAPLY_MARKER_UNAVAILABLE')) return '\u041c\u0435\u0442\u043a\u0430 \u0443\u0436\u0435 \u0441\u043a\u0440\u044b\u0442\u0430, \u0443\u0434\u0430\u043b\u0435\u043d\u0430 \u0438\u043b\u0438 \u0435\u0451 \u0441\u0440\u043e\u043a \u0438\u0441\u0442\u0451\u043a.';
+    if (text.includes('MAPLY_INVALID_VOTE')) return '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0440\u0430\u0441\u043f\u043e\u0437\u043d\u0430\u0442\u044c \u0433\u043e\u043b\u043e\u0441. \u041e\u0431\u043d\u043e\u0432\u0438 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0443.';
+    if (text.includes('maply_vote') || text.includes('maply_votes') || text.includes('active_votes') || text.includes('hidden_by_votes') || error?.code === 'PGRST202') return '\u0413\u043e\u043b\u043e\u0441\u043e\u0432\u0430\u043d\u0438\u0435 \u0435\u0449\u0451 \u043d\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0435\u043d\u043e. \u0412\u044b\u043f\u043e\u043b\u043d\u0438 1-SQL-golosovanie.sql \u0432 Supabase SQL Editor.';
+    if (text.includes('MAPLY_RATE_LIMIT')) return '\u0417\u0430 \u0447\u0430\u0441 \u043c\u043e\u0436\u043d\u043e \u0434\u043e\u0431\u0430\u0432\u0438\u0442\u044c 20 \u043c\u0435\u0442\u043e\u043a. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439 \u043f\u043e\u0437\u0436\u0435.';
+    if (text.includes('Invalid login credentials')) return '\u041f\u0440\u043e\u0432\u0435\u0440\u044c email \u0438 \u043f\u0430\u0440\u043e\u043b\u044c.';
+    if (text.includes('Email not confirmed')) return '\u041f\u043e\u0434\u0442\u0432\u0435\u0440\u0434\u0438 email \u043f\u043e \u0441\u0441\u044b\u043b\u043a\u0435 \u0432 \u043f\u0438\u0441\u044c\u043c\u0435, \u0437\u0430\u0442\u0435\u043c \u0432\u043e\u0439\u0434\u0438.';
+    if (text.includes('rate limit') || text.includes('security purposes')) return '\u0421\u043b\u0438\u0448\u043a\u043e\u043c \u043c\u043d\u043e\u0433\u043e \u043f\u043e\u043f\u044b\u0442\u043e\u043a. \u041f\u043e\u0434\u043e\u0436\u0434\u0438 \u043d\u0435\u0441\u043a\u043e\u043b\u044c\u043a\u043e \u043c\u0438\u043d\u0443\u0442.';
+    if (text.includes('email_address_not_authorized') || text.includes('Email address') && text.includes('not authorized')) return '\u041e\u0442\u043f\u0440\u0430\u0432\u043a\u0430 \u043f\u0438\u0441\u0435\u043c \u043d\u0430 \u044d\u0442\u043e\u0442 \u0430\u0434\u0440\u0435\u0441 \u043f\u043e\u043a\u0430 \u043d\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0435\u043d\u0430. \u0412\u043b\u0430\u0434\u0435\u043b\u0435\u0446 Maply \u0434\u043e\u043b\u0436\u0435\u043d \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0438\u0442\u044c SMTP \u0432 Supabase.';
+    if (text.includes('Password')) return '\u041f\u0430\u0440\u043e\u043b\u044c \u043d\u0435 \u043f\u043e\u0434\u0445\u043e\u0434\u0438\u0442 \u0442\u0440\u0435\u0431\u043e\u0432\u0430\u043d\u0438\u044f\u043c. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439 \u0431\u043e\u043b\u0435\u0435 \u0434\u043b\u0438\u043d\u043d\u044b\u0439 \u043f\u0430\u0440\u043e\u043b\u044c.';
+    if (text.includes('already registered')) return '\u042d\u0442\u043e\u0442 email \u0443\u0436\u0435 \u0437\u0430\u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0438\u0440\u043e\u0432\u0430\u043d. \u0412\u044b\u0431\u0435\u0440\u0438 \u00ab\u0412\u043e\u0439\u0442\u0438\u00bb.';
+    if (text.includes('Failed to fetch') || text.includes('NetworkError') || !navigator.onLine) return '\u041d\u0435\u0442 \u0441\u043e\u0435\u0434\u0438\u043d\u0435\u043d\u0438\u044f. \u041f\u0440\u043e\u0432\u0435\u0440\u044c \u0438\u043d\u0442\u0435\u0440\u043d\u0435\u0442 \u0438 \u043f\u043e\u043f\u0440\u043e\u0431\u0443\u0439 \u0441\u043d\u043e\u0432\u0430.';
+    if (text.includes('maply_markers') || error?.code === 'PGRST205') return '\u0422\u0430\u0431\u043b\u0438\u0446\u0430 Maply \u0435\u0449\u0451 \u043d\u0435 \u0433\u043e\u0442\u043e\u0432\u0430. \u0412\u044b\u043f\u043e\u043b\u043d\u0438 \u0438\u0441\u0445\u043e\u0434\u043d\u044b\u0439 0-SQL-dlya-Supabase.sql \u0432 Supabase SQL Editor.';
+    if (error?.code === '42501' || text.includes('JWT') || text.includes('MAPLY_LOGIN_REQUIRED')) return '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u044c \u0432\u0445\u043e\u0434. \u0412\u044b\u0439\u0434\u0438 \u0438 \u0432\u043e\u0439\u0434\u0438 \u0441\u043d\u043e\u0432\u0430. \u0415\u0441\u043b\u0438 \u043e\u0448\u0438\u0431\u043a\u0430 \u043e\u0441\u0442\u0430\u0451\u0442\u0441\u044f, \u043f\u0440\u043e\u0432\u0435\u0440\u044c \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438 \u0431\u0430\u0437\u044b.';
+    return '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0432\u044b\u043f\u043e\u043b\u043d\u0438\u0442\u044c \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439 \u0441\u043d\u043e\u0432\u0430. ' + text.slice(0,180);
   }
   function cancelPlacement() {
     placing = false; $('placement').hidden = true; document.body.classList.remove('placing');
   }
   function beginPlacement() {
-    if (!navigator.onLine) return toast('Ğ”Ğ»Ñ Ğ´Ğ¾Ğ±Ğ°Ğ²Ğ»ĞµĞ½Ğ¸Ñ Ğ¼ĞµÑ‚ĞºĞ¸ Ğ½ÑƒĞ¶ĞµĞ½ Ğ¸Ğ½Ñ‚ĞµÑ€Ğ½ĞµÑ‚.');
-    if (!db) return toast('ĞŸĞ¾Ğ´ĞºĞ»ÑÑ‡ĞµĞ½Ğ¸Ğµ ĞµÑ‰Ñ‘ Ğ½Ğµ Ğ³Ğ¾Ñ‚Ğ¾Ğ²Ğ¾. ĞĞ±Ğ½Ğ¾Ğ²Ğ¸ ÑÑ‚Ñ€Ğ°Ğ½Ğ¸Ñ†Ñƒ Ğ¸Ğ»Ğ¸ Ğ¿Ñ€Ğ¾Ğ²ĞµÑ€ÑŒ Ğ½Ğ°ÑÑ‚Ñ€Ğ¾Ğ¹ĞºĞ¸ Vercel.');
+    if (!navigator.onLine) return toast('\u0414\u043b\u044f \u0434\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u0438\u044f \u043c\u0435\u0442\u043a\u0438 \u043d\u0443\u0436\u0435\u043d \u0438\u043d\u0442\u0435\u0440\u043d\u0435\u0442.');
+    if (!db) return toast('\u041f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435 \u0435\u0449\u0451 \u043d\u0435 \u0433\u043e\u0442\u043e\u0432\u043e. \u041e\u0431\u043d\u043e\u0432\u0438 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0443 \u0438\u043b\u0438 \u043f\u0440\u043e\u0432\u0435\u0440\u044c \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438 Vercel.');
     if (!user) {
-      resumeAfterLogin = true; message('auth-message','Ğ’Ğ¾Ğ¹Ğ´Ğ¸, Ñ‡Ñ‚Ğ¾Ğ±Ñ‹ Ğ´Ğ¾Ğ±Ğ°Ğ²Ğ¸Ñ‚ÑŒ Ğ¼ĞµÑ‚ĞºÑƒ.');
+      resumeAfterLogin = true; message('auth-message','\u0412\u043e\u0439\u0434\u0438, \u0447\u0442\u043e\u0431\u044b \u0434\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043c\u0435\u0442\u043a\u0443.');
       $('auth-dialog').showModal(); return;
     }
     placing = true; selectedPoint = null; map.closePopup();
     $('placement').hidden = false; document.body.classList.add('placing');
   }
   function updateAccount() {
-    $('account').textContent = user ? 'ĞĞºĞºĞ°ÑƒĞ½Ñ‚' : 'Ğ’Ğ¾Ğ¹Ñ‚Ğ¸';
+    $('account').textContent = user ? '\u0410\u043a\u043a\u0430\u0443\u043d\u0442' : '\u0412\u043e\u0439\u0442\u0438';
     $('signed-in').hidden = !user; $('auth-form').hidden = Boolean(user);
     $('user-email').textContent = user?.email || '';
     if (user && resumeAfterLogin) {
@@ -70,11 +70,11 @@
     return node;
   }
   async function voteFor(pin,choice) {
-    if (!navigator.onLine) return toast('Ğ”Ğ»Ñ Ğ³Ğ¾Ğ»Ğ¾ÑĞ¾Ğ²Ğ°Ğ½Ğ¸Ñ Ğ½ÑƒĞ¶ĞµĞ½ Ğ¸Ğ½Ñ‚ĞµÑ€Ğ½ĞµÑ‚.');
-    if (!db) return toast('ĞŸĞ¾Ğ´ĞºĞ»ÑÑ‡ĞµĞ½Ğ¸Ğµ ĞµÑ‰Ñ‘ Ğ½Ğµ Ğ³Ğ¾Ñ‚Ğ¾Ğ²Ğ¾. ĞĞ±Ğ½Ğ¾Ğ²Ğ¸ ÑÑ‚Ñ€Ğ°Ğ½Ğ¸Ñ†Ñƒ.');
+    if (!navigator.onLine) return toast('\u0414\u043b\u044f \u0433\u043e\u043b\u043e\u0441\u043e\u0432\u0430\u043d\u0438\u044f \u043d\u0443\u0436\u0435\u043d \u0438\u043d\u0442\u0435\u0440\u043d\u0435\u0442.');
+    if (!db) return toast('\u041f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435 \u0435\u0449\u0451 \u043d\u0435 \u0433\u043e\u0442\u043e\u0432\u043e. \u041e\u0431\u043d\u043e\u0432\u0438 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0443.');
     if (!user) {
       resumeAfterLogin = false;
-      message('auth-message','Ğ’Ğ¾Ğ¹Ğ´Ğ¸, Ñ‡Ñ‚Ğ¾Ğ±Ñ‹ Ğ³Ğ¾Ğ»Ğ¾ÑĞ¾Ğ²Ğ°Ñ‚ÑŒ. ĞŸĞ¾ÑĞ»Ğµ Ğ²Ñ…Ğ¾Ğ´Ğ° Ğ¾Ñ‚ĞºÑ€Ğ¾Ğ¹ Ğ¼ĞµÑ‚ĞºÑƒ Ğ¸ Ğ²Ñ‹Ğ±ĞµÑ€Ğ¸ Ğ³Ğ¾Ğ»Ğ¾Ñ.');
+      message('auth-message','\u0412\u043e\u0439\u0434\u0438, \u0447\u0442\u043e\u0431\u044b \u0433\u043e\u043b\u043e\u0441\u043e\u0432\u0430\u0442\u044c. \u041f\u043e\u0441\u043b\u0435 \u0432\u0445\u043e\u0434\u0430 \u043e\u0442\u043a\u0440\u043e\u0439 \u043c\u0435\u0442\u043a\u0443 \u0438 \u0432\u044b\u0431\u0435\u0440\u0438 \u0433\u043e\u043b\u043e\u0441.');
       $('auth-dialog').showModal(); return;
     }
     if (pendingVotes.has(pin.id)) return;
@@ -89,7 +89,7 @@
         const marker = pinsById.get(pin.id);
         if (marker) layer.removeLayer(marker);
         pinsById.delete(pin.id); $('count').textContent = String(pinsById.size);
-        toast('Ğ“Ğ¾Ğ»Ğ¾Ñ ÑƒÑ‡Ñ‚Ñ‘Ğ½. ĞœĞµÑ‚ĞºĞ° ÑĞºÑ€Ñ‹Ñ‚Ğ°: Â«Ğ½ĞµÑ‚Â» Ğ½Ğ° 3 Ğ±Ğ¾Ğ»ÑŒÑˆĞµ, Ñ‡ĞµĞ¼ Â«Ğ°ĞºÑ‚ÑƒĞ°Ğ»ÑŒĞ½Ğ¾Â».');
+        toast('\u0413\u043e\u043b\u043e\u0441 \u0443\u0447\u0442\u0451\u043d. \u041c\u0435\u0442\u043a\u0430 \u0441\u043a\u0440\u044b\u0442\u0430: \u00ab\u043d\u0435\u0442\u00bb \u043d\u0430 3 \u0431\u043e\u043b\u044c\u0448\u0435, \u0447\u0435\u043c \u00ab\u0430\u043a\u0442\u0443\u0430\u043b\u044c\u043d\u043e\u00bb.');
       } else {
         const updated = {active_votes:data.active_votes,gone_votes:data.gone_votes,
           expires_at:data.expires_at,my_vote:user?.id === voterId ? data.my_vote : null};
@@ -97,7 +97,7 @@
         const currentMarker = pinsById.get(pin.id);
         if (currentMarker) Object.assign(currentMarker.maplyPin,updated);
         refreshPopup(pin.id);
-        toast(data.extended ? 'Ğ“Ğ¾Ğ»Ğ¾Ñ ÑƒÑ‡Ñ‚Ñ‘Ğ½. Ğ¡Ñ€Ğ¾Ğº Ğ¼ĞµÑ‚ĞºĞ¸ Ğ¿Ñ€Ğ¾Ğ´Ğ»Ñ‘Ğ½ Ğ½Ğ° 2 Ñ‡Ğ°ÑĞ°.' : 'Ğ“Ğ¾Ğ»Ğ¾Ñ ÑƒÑ‡Ñ‚Ñ‘Ğ½.');
+        toast(data.extended ? '\u0413\u043e\u043b\u043e\u0441 \u0443\u0447\u0442\u0451\u043d. \u0421\u0440\u043e\u043a \u043c\u0435\u0442\u043a\u0438 \u043f\u0440\u043e\u0434\u043b\u0451\u043d \u043d\u0430 2 \u0447\u0430\u0441\u0430.' : '\u0413\u043e\u043b\u043e\u0441 \u0443\u0447\u0442\u0451\u043d.');
       }
       await loadPins();
     } catch (error) {
@@ -119,12 +119,12 @@
     if (pin.description) box.append(element('p',pin.description));
     const time = element('time',new Date(pin.created_at).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}));
     time.dateTime = pin.created_at; box.append(time);
-    box.append(element('p','Ğ’Ğ¸Ğ´Ğ½Ğ° Ğ´Ğ¾: ' + new Date(pin.expires_at).toLocaleString('ru-RU',{
+    box.append(element('p','\u0412\u0438\u0434\u043d\u0430 \u0434\u043e: ' + new Date(pin.expires_at).toLocaleString('ru-RU',{
       day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'
     }),'small'));
-    box.append(element('p',`ĞĞºÑ‚ÑƒĞ°Ğ»ÑŒĞ½Ğ¾: ${pin.active_votes} / ĞĞµÑ‚: ${pin.gone_votes}`,'vote-counts'));
+    box.append(element('p',`\u0410\u043a\u0442\u0443\u0430\u043b\u044c\u043d\u043e: ${pin.active_votes} / \u041d\u0435\u0442: ${pin.gone_votes}`,'vote-counts'));
     const votes = element('div',undefined,'vote-buttons');
-    for (const [choice,label] of [['active','Ğ•Ñ‰Ñ‘ Ğ°ĞºÑ‚ÑƒĞ°Ğ»ÑŒĞ½Ğ¾'],['gone','Ğ£Ğ¶Ğµ Ğ½ĞµÑ‚']]) {
+    for (const [choice,label] of [['active','\u0415\u0449\u0451 \u0430\u043a\u0442\u0443\u0430\u043b\u044c\u043d\u043e'],['gone','\u0423\u0436\u0435 \u043d\u0435\u0442']]) {
       const button = element('button',label,'vote-button');
       button.type = 'button';
       const selected = Boolean(user && pin.my_vote === choice);
@@ -136,20 +136,20 @@
     }
     box.append(votes);
     box.append(element('p',user
-      ? 'ĞœĞ¾Ğ¶Ğ½Ğ¾ Ğ¼ĞµĞ½ÑÑ‚ÑŒ Ğ³Ğ¾Ğ»Ğ¾Ñ. ĞŸĞµÑ€Ğ²Ğ¾Ğµ Â«Ğ°ĞºÑ‚ÑƒĞ°Ğ»ÑŒĞ½Ğ¾Â» Ğ¾Ñ‚ Ñ‚ĞµĞ±Ñ Ğ´Ğ¾Ğ±Ğ°Ğ²Ğ¸Ñ‚ 2 Ñ‡Ğ°ÑĞ°. ĞŸÑ€Ğ¸ Ğ¿ĞµÑ€ĞµĞ²ĞµÑĞµ Â«Ğ½ĞµÑ‚Â» Ğ½Ğ° 3 Ğ¼ĞµÑ‚ĞºĞ° ÑĞºÑ€Ñ‹Ğ²Ğ°ĞµÑ‚ÑÑ.'
-      : 'Ğ’Ğ¾Ğ¹Ğ´Ğ¸, Ñ‡Ñ‚Ğ¾Ğ±Ñ‹ Ğ³Ğ¾Ğ»Ğ¾ÑĞ¾Ğ²Ğ°Ñ‚ÑŒ. ĞŸÑ€Ğ¸ Ğ¿ĞµÑ€ĞµĞ²ĞµÑĞµ Â«Ğ½ĞµÑ‚Â» Ğ½Ğ° 3 Ğ¼ĞµÑ‚ĞºĞ° ÑĞºÑ€Ñ‹Ğ²Ğ°ĞµÑ‚ÑÑ.','vote-hint'));
+      ? '\u041c\u043e\u0436\u043d\u043e \u043c\u0435\u043d\u044f\u0442\u044c \u0433\u043e\u043b\u043e\u0441. \u041f\u0435\u0440\u0432\u043e\u0435 \u00ab\u0430\u043a\u0442\u0443\u0430\u043b\u044c\u043d\u043e\u00bb \u043e\u0442 \u0442\u0435\u0431\u044f \u0434\u043e\u0431\u0430\u0432\u0438\u0442 2 \u0447\u0430\u0441\u0430. \u041f\u0440\u0438 \u043f\u0435\u0440\u0435\u0432\u0435\u0441\u0435 \u00ab\u043d\u0435\u0442\u00bb \u043d\u0430 3 \u043c\u0435\u0442\u043a\u0430 \u0441\u043a\u0440\u044b\u0432\u0430\u0435\u0442\u0441\u044f.'
+      : '\u0412\u043e\u0439\u0434\u0438, \u0447\u0442\u043e\u0431\u044b \u0433\u043e\u043b\u043e\u0441\u043e\u0432\u0430\u0442\u044c. \u041f\u0440\u0438 \u043f\u0435\u0440\u0435\u0432\u0435\u0441\u0435 \u00ab\u043d\u0435\u0442\u00bb \u043d\u0430 3 \u043c\u0435\u0442\u043a\u0430 \u0441\u043a\u0440\u044b\u0432\u0430\u0435\u0442\u0441\u044f.','vote-hint'));
     if (user?.id === pin.user_id) {
-      const button = element('button','Ğ£Ğ´Ğ°Ğ»Ğ¸Ñ‚ÑŒ Ğ¼Ğ¾Ñ Ğ¼ĞµÑ‚ĞºÑƒ');
+      const button = element('button','\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u043c\u043e\u044e \u043c\u0435\u0442\u043a\u0443');
       button.type = 'button';
       button.addEventListener('click',async () => {
-        if (!navigator.onLine) return toast('Ğ”Ğ»Ñ ÑƒĞ´Ğ°Ğ»ĞµĞ½Ğ¸Ñ Ğ½ÑƒĞ¶ĞµĞ½ Ğ¸Ğ½Ñ‚ĞµÑ€Ğ½ĞµÑ‚.');
-        if (!confirm('Ğ£Ğ´Ğ°Ğ»Ğ¸Ñ‚ÑŒ ÑÑ‚Ñƒ Ğ¼ĞµÑ‚ĞºÑƒ?')) return;
+        if (!navigator.onLine) return toast('\u0414\u043b\u044f \u0443\u0434\u0430\u043b\u0435\u043d\u0438\u044f \u043d\u0443\u0436\u0435\u043d \u0438\u043d\u0442\u0435\u0440\u043d\u0435\u0442.');
+        if (!confirm('\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u044d\u0442\u0443 \u043c\u0435\u0442\u043a\u0443?')) return;
         button.disabled = true;
         try {
           const {data,error} = await db.from('maply_markers').delete().eq('id',pin.id).eq('user_id',user.id).select('id');
           if (error) throw error;
-          if (!data?.length) {toast('ĞœĞµÑ‚ĞºĞ° ÑƒĞ¶Ğµ Ğ¸ÑÑ‡ĞµĞ·Ğ»Ğ° Ğ¸Ğ»Ğ¸ Ğ½ĞµĞ´Ğ¾ÑÑ‚ÑƒĞ¿Ğ½Ğ°.');}
-          else toast('ĞœĞµÑ‚ĞºĞ° ÑƒĞ´Ğ°Ğ»ĞµĞ½Ğ°.');
+          if (!data?.length) {toast('\u041c\u0435\u0442\u043a\u0430 \u0443\u0436\u0435 \u0438\u0441\u0447\u0435\u0437\u043b\u0430 \u0438\u043b\u0438 \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u043d\u0430.');}
+          else toast('\u041c\u0435\u0442\u043a\u0430 \u0443\u0434\u0430\u043b\u0435\u043d\u0430.');
           map.closePopup(); await loadPins();
         } catch (error) {toast(errorText(error));}
         finally {button.disabled = false;}
@@ -175,11 +175,11 @@
   const wrapLng = lng => ((lng + 180) % 360 + 360) % 360 - 180;
   async function loadPins() {
     if (!db || !map || document.hidden) return;
-    if (!navigator.onLine) {status('ĞĞµÑ‚ Ğ¸Ğ½Ñ‚ĞµÑ€Ğ½ĞµÑ‚Ğ°. ĞœĞµÑ‚ĞºĞ¸ Ğ¸ ĞºĞ°Ñ€Ñ‚Ğ° Ğ¼Ğ¾Ğ³ÑƒÑ‚ Ğ±Ñ‹Ñ‚ÑŒ ÑƒÑÑ‚Ğ°Ñ€ĞµĞ²ÑˆĞ¸Ğ¼Ğ¸.',true);return;}
+    if (!navigator.onLine) {status('\u041d\u0435\u0442 \u0438\u043d\u0442\u0435\u0440\u043d\u0435\u0442\u0430. \u041c\u0435\u0442\u043a\u0438 \u0438 \u043a\u0430\u0440\u0442\u0430 \u043c\u043e\u0433\u0443\u0442 \u0431\u044b\u0442\u044c \u0443\u0441\u0442\u0430\u0440\u0435\u0432\u0448\u0438\u043c\u0438.',true);return;}
     const number = ++loadNumber;
     const viewerId = user?.id || null;
     $('refresh').disabled = true;
-    status('ĞĞ±Ğ½Ğ¾Ğ²Ğ»ÑĞµĞ¼ Ğ¼ĞµÑ‚ĞºĞ¸â€¦');
+    status('\u041e\u0431\u043d\u043e\u0432\u043b\u044f\u0435\u043c \u043c\u0435\u0442\u043a\u0438\u2026');
     const bounds = map.getBounds();
     let query = db.from('maply_markers').select('id,user_id,type,title,description,lat,lng,created_at,expires_at,active_votes,gone_votes,hidden_by_votes')
       .eq('hidden_by_votes',false)
@@ -205,7 +205,7 @@
       if (number !== loadNumber || viewerId !== (user?.id || null)) return;
       for (const pin of pins) pin.my_vote = ownVotes.get(pin.id) || null;
       renderPins(pins);
-      status(pins.length === 500 ? 'ĞŸĞ¾ĞºĞ°Ğ·Ğ°Ğ½Ñ‹ 500 Ğ¿Ğ¾ÑĞ»ĞµĞ´Ğ½Ğ¸Ñ… Ğ¼ĞµÑ‚Ğ¾Ğº. ĞŸÑ€Ğ¸Ğ±Ğ»Ğ¸Ğ·ÑŒ ĞºĞ°Ñ€Ñ‚Ñƒ.' : pins.length ? 'ĞœĞµÑ‚ĞºĞ¸ Ğ¾Ğ±Ğ½Ğ¾Ğ²Ğ»ĞµĞ½Ñ‹' : 'Ğ—Ğ´ĞµÑÑŒ Ğ¿Ğ¾ĞºĞ° Ğ½ĞµÑ‚ Ğ¼ĞµÑ‚Ğ¾Ğº. ĞœĞ¾Ğ¶Ğ½Ğ¾ Ğ´Ğ¾Ğ±Ğ°Ğ²Ğ¸Ñ‚ÑŒ Ğ¿ĞµÑ€Ğ²ÑƒÑ.');
+      status(pins.length === 500 ? '\u041f\u043e\u043a\u0430\u0437\u0430\u043d\u044b 500 \u043f\u043e\u0441\u043b\u0435\u0434\u043d\u0438\u0445 \u043c\u0435\u0442\u043e\u043a. \u041f\u0440\u0438\u0431\u043b\u0438\u0437\u044c \u043a\u0430\u0440\u0442\u0443.' : pins.length ? '\u041c\u0435\u0442\u043a\u0438 \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u044b' : '\u0417\u0434\u0435\u0441\u044c \u043f\u043e\u043a\u0430 \u043d\u0435\u0442 \u043c\u0435\u0442\u043e\u043a. \u041c\u043e\u0436\u043d\u043e \u0434\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043f\u0435\u0440\u0432\u0443\u044e.');
     } catch (error) {if (number === loadNumber) status(errorText(error),true);}
     finally {if (number === loadNumber) $('refresh').disabled = false;}
   }
@@ -221,16 +221,16 @@
   $('auth-dialog').addEventListener('close',() => {resumeAfterLogin = false;});
   $('auth-switch').addEventListener('click',() => {
     signingUp = !signingUp;
-    $('auth-title').textContent = signingUp ? 'Ğ¡Ğ¾Ğ·Ğ´Ğ°Ñ‚ÑŒ Ğ°ĞºĞºĞ°ÑƒĞ½Ñ‚' : 'Ğ’Ñ…Ğ¾Ğ´ Ğ² Maply';
-    $('auth-submit').textContent = signingUp ? 'Ğ—Ğ°Ñ€ĞµĞ³Ğ¸ÑÑ‚Ñ€Ğ¸Ñ€Ğ¾Ğ²Ğ°Ñ‚ÑŒÑÑ' : 'Ğ’Ğ¾Ğ¹Ñ‚Ğ¸';
-    $('auth-switch').textContent = signingUp ? 'Ğ£Ğ¶Ğµ ĞµÑÑ‚ÑŒ Ğ°ĞºĞºĞ°ÑƒĞ½Ñ‚? Ğ’Ğ¾Ğ¹Ñ‚Ğ¸' : 'ĞĞµÑ‚ Ğ°ĞºĞºĞ°ÑƒĞ½Ñ‚Ğ°? Ğ—Ğ°Ñ€ĞµĞ³Ğ¸ÑÑ‚Ñ€Ğ¸Ñ€Ğ¾Ğ²Ğ°Ñ‚ÑŒÑÑ';
+    $('auth-title').textContent = signingUp ? '\u0421\u043e\u0437\u0434\u0430\u0442\u044c \u0430\u043a\u043a\u0430\u0443\u043d\u0442' : '\u0412\u0445\u043e\u0434 \u0432 Maply';
+    $('auth-submit').textContent = signingUp ? '\u0417\u0430\u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0438\u0440\u043e\u0432\u0430\u0442\u044c\u0441\u044f' : '\u0412\u043e\u0439\u0442\u0438';
+    $('auth-switch').textContent = signingUp ? '\u0423\u0436\u0435 \u0435\u0441\u0442\u044c \u0430\u043a\u043a\u0430\u0443\u043d\u0442? \u0412\u043e\u0439\u0442\u0438' : '\u041d\u0435\u0442 \u0430\u043a\u043a\u0430\u0443\u043d\u0442\u0430? \u0417\u0430\u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0438\u0440\u043e\u0432\u0430\u0442\u044c\u0441\u044f';
     $('password').autocomplete = signingUp ? 'new-password' : 'current-password';
     message('auth-message','');
   });
   $('auth-form').addEventListener('submit',async event => {
     event.preventDefault();
-    if (!db) return message('auth-message','Ğ¡Ğ½Ğ°Ñ‡Ğ°Ğ»Ğ° Ğ½Ğ°ÑÑ‚Ñ€Ğ¾Ğ¹ Ğ¿Ğ¾Ğ´ĞºĞ»ÑÑ‡ĞµĞ½Ğ¸Ğµ Supabase Ğ² Vercel.');
-    if (!navigator.onLine) return message('auth-message','Ğ”Ğ»Ñ Ğ²Ñ…Ğ¾Ğ´Ğ° Ğ½ÑƒĞ¶ĞµĞ½ Ğ¸Ğ½Ñ‚ĞµÑ€Ğ½ĞµÑ‚.');
+    if (!db) return message('auth-message','\u0421\u043d\u0430\u0447\u0430\u043b\u0430 \u043d\u0430\u0441\u0442\u0440\u043e\u0439 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435 Supabase \u0432 Vercel.');
+    if (!navigator.onLine) return message('auth-message','\u0414\u043b\u044f \u0432\u0445\u043e\u0434\u0430 \u043d\u0443\u0436\u0435\u043d \u0438\u043d\u0442\u0435\u0440\u043d\u0435\u0442.');
     $('auth-submit').disabled = true; $('auth-switch').disabled = true; message('auth-message','');
     try {
       const credentials = {email:$('email').value.trim(),password:$('password').value};
@@ -240,9 +240,9 @@
       if (result.error) throw result.error;
       $('password').value = '';
       if (signingUp && !result.data.session) {
-        message('auth-message','ĞŸÑ€Ğ¾Ğ²ĞµÑ€ÑŒ Ğ¿Ğ¾Ñ‡Ñ‚Ñƒ Ğ¸ ÑĞ¿Ğ°Ğ¼. Ğ•ÑĞ»Ğ¸ Ğ°Ğ´Ñ€ĞµÑ Ğ½Ğ¾Ğ²Ñ‹Ğ¹, Ğ¿Ñ€Ğ¸Ğ´Ñ‘Ñ‚ Ğ¿Ğ¸ÑÑŒĞ¼Ğ¾ Ñ Ğ¿Ğ¾Ğ´Ñ‚Ğ²ĞµÑ€Ğ¶Ğ´ĞµĞ½Ğ¸ĞµĞ¼. Ğ—Ğ°Ñ‚ĞµĞ¼ Ğ²ĞµÑ€Ğ½Ğ¸ÑÑŒ Ğ¸ Ğ²Ğ¾Ğ¹Ğ´Ğ¸.',true);
+        message('auth-message','\u041f\u0440\u043e\u0432\u0435\u0440\u044c \u043f\u043e\u0447\u0442\u0443 \u0438 \u0441\u043f\u0430\u043c. \u0415\u0441\u043b\u0438 \u0430\u0434\u0440\u0435\u0441 \u043d\u043e\u0432\u044b\u0439, \u043f\u0440\u0438\u0434\u0451\u0442 \u043f\u0438\u0441\u044c\u043c\u043e \u0441 \u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043d\u0438\u0435\u043c. \u0417\u0430\u0442\u0435\u043c \u0432\u0435\u0440\u043d\u0438\u0441\u044c \u0438 \u0432\u043e\u0439\u0434\u0438.',true);
       } else {
-        user = result.data.session?.user || null; updateAccount(); $('auth-dialog').close(); toast('Ğ¢Ñ‹ Ğ²Ğ¾ÑˆÑ‘Ğ» Ğ² Maply.');
+        user = result.data.session?.user || null; updateAccount(); $('auth-dialog').close(); toast('\u0422\u044b \u0432\u043e\u0448\u0451\u043b \u0432 Maply.');
       }
     } catch (error) {message('auth-message',errorText(error));}
     finally {$('auth-submit').disabled = false; $('auth-switch').disabled = false;}
@@ -253,18 +253,18 @@
     try {
       const {error} = await db.auth.signOut({scope:'local'});
       if (error) throw error;
-      user = null; updateAccount(); $('auth-dialog').close(); await loadPins(); toast('Ğ¢Ñ‹ Ğ²Ñ‹ÑˆĞµĞ» Ğ¸Ğ· Ğ°ĞºĞºĞ°ÑƒĞ½Ñ‚Ğ°.');
+      user = null; updateAccount(); $('auth-dialog').close(); await loadPins(); toast('\u0422\u044b \u0432\u044b\u0448\u0435\u043b \u0438\u0437 \u0430\u043a\u043a\u0430\u0443\u043d\u0442\u0430.');
     } catch (error) {message('auth-message',errorText(error));}
     finally {$('logout').disabled = false;}
   });
   $('type').addEventListener('change',() => {$('title').required = $('type').value === 'custom';});
   $('pin-form').addEventListener('submit',async event => {
     event.preventDefault();
-    if (!db || !user || !selectedPoint) return message('pin-message','Ğ’Ğ¾Ğ¹Ğ´Ğ¸ Ğ¸ Ğ²Ñ‹Ğ±ĞµÑ€Ğ¸ Ğ¼ĞµÑÑ‚Ğ¾ Ğ½Ğ° ĞºĞ°Ñ€Ñ‚Ğµ ĞµÑ‰Ñ‘ Ñ€Ğ°Ğ·.');
-    if (!navigator.onLine) return message('pin-message','Ğ”Ğ»Ñ Ğ¿ÑƒĞ±Ğ»Ğ¸ĞºĞ°Ñ†Ğ¸Ğ¸ Ğ½ÑƒĞ¶ĞµĞ½ Ğ¸Ğ½Ñ‚ĞµÑ€Ğ½ĞµÑ‚.');
+    if (!db || !user || !selectedPoint) return message('pin-message','\u0412\u043e\u0439\u0434\u0438 \u0438 \u0432\u044b\u0431\u0435\u0440\u0438 \u043c\u0435\u0441\u0442\u043e \u043d\u0430 \u043a\u0430\u0440\u0442\u0435 \u0435\u0449\u0451 \u0440\u0430\u0437.');
+    if (!navigator.onLine) return message('pin-message','\u0414\u043b\u044f \u043f\u0443\u0431\u043b\u0438\u043a\u0430\u0446\u0438\u0438 \u043d\u0443\u0436\u0435\u043d \u0438\u043d\u0442\u0435\u0440\u043d\u0435\u0442.');
     const type = $('type').value;
     const title = $('title').value.trim() || (type === 'custom' ? '' : TYPES[type].name);
-    if (!title) return message('pin-message','Ğ£ĞºĞ°Ğ¶Ğ¸ Ğ½Ğ°Ğ·Ğ²Ğ°Ğ½Ğ¸Ğµ ÑĞ²Ğ¾ĞµĞ¹ Ğ¼ĞµÑ‚ĞºĞ¸.');
+    if (!title) return message('pin-message','\u0423\u043a\u0430\u0436\u0438 \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u0441\u0432\u043e\u0435\u0439 \u043c\u0435\u0442\u043a\u0438.');
     $('pin-submit').disabled = true; message('pin-message','');
     try {
       const {error} = await db.from('maply_markers').insert({
@@ -272,13 +272,13 @@
         lat:selectedPoint.lat,lng:wrapLng(selectedPoint.lng)
       });
       if (error) throw error;
-      $('pin-dialog').close(); selectedPoint = null; toast('ĞœĞµÑ‚ĞºĞ° Ğ´Ğ¾Ğ±Ğ°Ğ²Ğ»ĞµĞ½Ğ°.'); await loadPins();
+      $('pin-dialog').close(); selectedPoint = null; toast('\u041c\u0435\u0442\u043a\u0430 \u0434\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u0430.'); await loadPins();
     } catch (error) {message('pin-message',errorText(error));}
     finally {$('pin-submit').disabled = false;}
   });
   $('locate').addEventListener('click',() => {
-    if (!map) return toast('ĞšĞ°Ñ€Ñ‚Ğ° ĞµÑ‰Ñ‘ Ğ·Ğ°Ğ³Ñ€ÑƒĞ¶Ğ°ĞµÑ‚ÑÑ.');
-    if (!navigator.geolocation) return toast('Ğ­Ñ‚Ğ¾Ñ‚ Ğ±Ñ€Ğ°ÑƒĞ·ĞµÑ€ Ğ½Ğµ Ğ¿Ğ¾Ğ´Ğ´ĞµÑ€Ğ¶Ğ¸Ğ²Ğ°ĞµÑ‚ Ğ³ĞµĞ¾Ğ»Ğ¾ĞºĞ°Ñ†Ğ¸Ñ.');
+    if (!map) return toast('\u041a\u0430\u0440\u0442\u0430 \u0435\u0449\u0451 \u0437\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u0442\u0441\u044f.');
+    if (!navigator.geolocation) return toast('\u042d\u0442\u043e\u0442 \u0431\u0440\u0430\u0443\u0437\u0435\u0440 \u043d\u0435 \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0435\u0442 \u0433\u0435\u043e\u043b\u043e\u043a\u0430\u0446\u0438\u044e.');
     $('locate').disabled = true;
     navigator.geolocation.getCurrentPosition(position => {
       const {latitude,longitude,accuracy} = position.coords;
@@ -288,10 +288,10 @@
       $('locate').disabled = false;
     },error => {
       $('locate').disabled = false;
-      toast(error.code === 1 ? 'Ğ Ğ°Ğ·Ñ€ĞµÑˆĞ¸ Ğ´Ğ¾ÑÑ‚ÑƒĞ¿ Ğº Ğ¼ĞµÑÑ‚Ğ¾Ğ¿Ğ¾Ğ»Ğ¾Ğ¶ĞµĞ½Ğ¸Ñ Ğ² Ğ½Ğ°ÑÑ‚Ñ€Ğ¾Ğ¹ĞºĞ°Ñ… Ğ±Ñ€Ğ°ÑƒĞ·ĞµÑ€Ğ°. ĞœĞµÑÑ‚Ğ¾ ÑĞ¾Ğ±Ñ‹Ñ‚Ğ¸Ñ Ğ¼Ğ¾Ğ¶Ğ½Ğ¾ Ğ²Ñ‹Ğ±Ñ€Ğ°Ñ‚ÑŒ Ğ²Ñ€ÑƒÑ‡Ğ½ÑƒÑ.' : 'ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ¾Ğ¿Ñ€ĞµĞ´ĞµĞ»Ğ¸Ñ‚ÑŒ Ğ¼ĞµÑÑ‚Ğ¾Ğ¿Ğ¾Ğ»Ğ¾Ğ¶ĞµĞ½Ğ¸Ğµ. Ğ’Ñ‹Ğ±ĞµÑ€Ğ¸ Ğ¼ĞµÑÑ‚Ğ¾ Ğ½Ğ° ĞºĞ°Ñ€Ñ‚Ğµ Ğ²Ñ€ÑƒÑ‡Ğ½ÑƒÑ.');
+      toast(error.code === 1 ? '\u0420\u0430\u0437\u0440\u0435\u0448\u0438 \u0434\u043e\u0441\u0442\u0443\u043f \u043a \u043c\u0435\u0441\u0442\u043e\u043f\u043e\u043b\u043e\u0436\u0435\u043d\u0438\u044e \u0432 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430\u0445 \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0430. \u041c\u0435\u0441\u0442\u043e \u0441\u043e\u0431\u044b\u0442\u0438\u044f \u043c\u043e\u0436\u043d\u043e \u0432\u044b\u0431\u0440\u0430\u0442\u044c \u0432\u0440\u0443\u0447\u043d\u0443\u044e.' : '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u043e\u043f\u0440\u0435\u0434\u0435\u043b\u0438\u0442\u044c \u043c\u0435\u0441\u0442\u043e\u043f\u043e\u043b\u043e\u0436\u0435\u043d\u0438\u0435. \u0412\u044b\u0431\u0435\u0440\u0438 \u043c\u0435\u0441\u0442\u043e \u043d\u0430 \u043a\u0430\u0440\u0442\u0435 \u0432\u0440\u0443\u0447\u043d\u0443\u044e.');
     },{enableHighAccuracy:true,timeout:12000,maximumAge:30000});
   });
-  window.addEventListener('offline',() => {status('ĞĞµÑ‚ Ğ¸Ğ½Ñ‚ĞµÑ€Ğ½ĞµÑ‚Ğ°. ĞœĞµÑ‚ĞºĞ¸ Ğ¸ ĞºĞ°Ñ€Ñ‚Ğ° Ğ¼Ğ¾Ğ³ÑƒÑ‚ Ğ±Ñ‹Ñ‚ÑŒ ÑƒÑÑ‚Ğ°Ñ€ĞµĞ²ÑˆĞ¸Ğ¼Ğ¸.',true);cancelPlacement();});
+  window.addEventListener('offline',() => {status('\u041d\u0435\u0442 \u0438\u043d\u0442\u0435\u0440\u043d\u0435\u0442\u0430. \u041c\u0435\u0442\u043a\u0438 \u0438 \u043a\u0430\u0440\u0442\u0430 \u043c\u043e\u0433\u0443\u0442 \u0431\u044b\u0442\u044c \u0443\u0441\u0442\u0430\u0440\u0435\u0432\u0448\u0438\u043c\u0438.',true);cancelPlacement();});
   window.addEventListener('online',() => {if (db) loadPins(); else location.reload();});
   document.addEventListener('visibilitychange',() => {if (!document.hidden) loadPins();});
   window.addEventListener('beforeinstallprompt',event => {event.preventDefault();installPrompt = event;$('install').hidden = false;});
@@ -303,8 +303,8 @@
   window.addEventListener('appinstalled',() => {$('install').hidden = true;});
 
   async function init() {
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => toast('ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ²ĞºĞ»ÑÑ‡Ğ¸Ñ‚ÑŒ ÑƒÑÑ‚Ğ°Ğ½Ğ¾Ğ²ĞºÑƒ Ğ¿Ñ€Ğ¸Ğ»Ğ¾Ğ¶ĞµĞ½Ğ¸Ñ. ĞšĞ°Ñ€Ñ‚Ğ° Ñ€Ğ°Ğ±Ğ¾Ñ‚Ğ°ĞµÑ‚ Ğ² Ğ±Ñ€Ğ°ÑƒĞ·ĞµÑ€Ğµ.'));
-    if (!window.L) {status('ĞšĞ°Ñ€Ñ‚Ğ° Ğ½Ğµ Ğ·Ğ°Ğ³Ñ€ÑƒĞ·Ğ¸Ğ»Ğ°ÑÑŒ. ĞŸÑ€Ğ¾Ğ²ĞµÑ€ÑŒ Ğ¸Ğ½Ñ‚ĞµÑ€Ğ½ĞµÑ‚ Ğ¸ Ğ¾Ğ±Ğ½Ğ¾Ğ²Ğ¸ ÑÑ‚Ñ€Ğ°Ğ½Ğ¸Ñ†Ñƒ.',true);return;}
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => toast('\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0432\u043a\u043b\u044e\u0447\u0438\u0442\u044c \u0443\u0441\u0442\u0430\u043d\u043e\u0432\u043a\u0443 \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u044f. \u041a\u0430\u0440\u0442\u0430 \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442 \u0432 \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0435.'));
+    if (!window.L) {status('\u041a\u0430\u0440\u0442\u0430 \u043d\u0435 \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u043b\u0430\u0441\u044c. \u041f\u0440\u043e\u0432\u0435\u0440\u044c \u0438\u043d\u0442\u0435\u0440\u043d\u0435\u0442 \u0438 \u043e\u0431\u043d\u043e\u0432\u0438 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0443.',true);return;}
     map = L.map('map',{zoomControl:false,worldCopyJump:true,minZoom:3,maxZoom:19,maxBounds:[[-85.05112878,-540],[85.05112878,540]]}).setView([41.0082,28.9784],12);
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
       attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',maxZoom:19
@@ -316,20 +316,20 @@
       if (!placing) return;
       selectedPoint = event.latlng; cancelPlacement();
       $('pin-form').reset(); $('title').required = false;
-      $('coordinates').textContent = `ĞœĞµÑÑ‚Ğ¾: ${selectedPoint.lat.toFixed(5)}, ${wrapLng(selectedPoint.lng).toFixed(5)}`;
+      $('coordinates').textContent = `\u041c\u0435\u0441\u0442\u043e: ${selectedPoint.lat.toFixed(5)}, ${wrapLng(selectedPoint.lng).toFixed(5)}`;
       message('pin-message',''); $('pin-dialog').showModal();
     });
-    if (!window.supabase) {status('ĞœĞ¾Ğ´ÑƒĞ»ÑŒ Ğ²Ñ…Ğ¾Ğ´Ğ° Ğ½Ğµ Ğ·Ğ°Ğ³Ñ€ÑƒĞ·Ğ¸Ğ»ÑÑ. ĞŸÑ€Ğ¾Ğ²ĞµÑ€ÑŒ Ğ¸Ğ½Ñ‚ĞµÑ€Ğ½ĞµÑ‚ Ğ¸ Ğ¾Ğ±Ğ½Ğ¾Ğ²Ğ¸ ÑÑ‚Ñ€Ğ°Ğ½Ğ¸Ñ†Ñƒ.',true);return;}
+    if (!window.supabase) {status('\u041c\u043e\u0434\u0443\u043b\u044c \u0432\u0445\u043e\u0434\u0430 \u043d\u0435 \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u043b\u0441\u044f. \u041f\u0440\u043e\u0432\u0435\u0440\u044c \u0438\u043d\u0442\u0435\u0440\u043d\u0435\u0442 \u0438 \u043e\u0431\u043d\u043e\u0432\u0438 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0443.',true);return;}
     try {
       let config;
       if (navigator.onLine) {
         const response = await fetch('/api/config',{cache:'no-store',signal:AbortSignal.timeout(15000)});
         config = await response.json();
-        if (!response.ok) throw new Error(config.error || 'ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ·Ğ°Ğ³Ñ€ÑƒĞ·Ğ¸Ñ‚ÑŒ Ğ½Ğ°ÑÑ‚Ñ€Ğ¾Ğ¹ĞºĞ¸ Vercel.');
+        if (!response.ok) throw new Error(config.error || '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438 Vercel.');
         try {localStorage.setItem('maply-public-config',JSON.stringify(config));} catch {}
       } else {
         try {config = JSON.parse(localStorage.getItem('maply-public-config') || 'null');} catch {}
-        if (!config) throw new Error('Ğ”Ğ»Ñ Ğ¿ĞµÑ€Ğ²Ğ¾Ğ³Ğ¾ Ğ¾Ñ‚ĞºÑ€Ñ‹Ñ‚Ğ¸Ñ Maply Ğ½ÑƒĞ¶ĞµĞ½ Ğ¸Ğ½Ñ‚ĞµÑ€Ğ½ĞµÑ‚.');
+        if (!config) throw new Error('\u0414\u043b\u044f \u043f\u0435\u0440\u0432\u043e\u0433\u043e \u043e\u0442\u043a\u0440\u044b\u0442\u0438\u044f Maply \u043d\u0443\u0436\u0435\u043d \u0438\u043d\u0442\u0435\u0440\u043d\u0435\u0442.');
       }
       db = window.supabase.createClient(config.url,config.key,{
         auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'implicit'}
@@ -344,7 +344,7 @@
       user = data.session?.user || null; updateAccount();
       await loadPins(); setInterval(loadPins,30000);
       if (location.hash.includes('error')) {
-        toast('Ğ¡ÑÑ‹Ğ»ĞºĞ° Ğ´Ğ»Ñ Ğ²Ñ…Ğ¾Ğ´Ğ° Ğ½ĞµĞ´ĞµĞ¹ÑÑ‚Ğ²Ğ¸Ñ‚ĞµĞ»ÑŒĞ½Ğ° Ğ¸Ğ»Ğ¸ ÑƒÑÑ‚Ğ°Ñ€ĞµĞ»Ğ°. ĞŸĞ¾Ğ¿Ñ€Ğ¾Ğ±ÑƒĞ¹ Ğ²Ğ¾Ğ¹Ñ‚Ğ¸ ÑĞ½Ğ¾Ğ²Ğ°.');
+        toast('\u0421\u0441\u044b\u043b\u043a\u0430 \u0434\u043b\u044f \u0432\u0445\u043e\u0434\u0430 \u043d\u0435\u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0442\u0435\u043b\u044c\u043d\u0430 \u0438\u043b\u0438 \u0443\u0441\u0442\u0430\u0440\u0435\u043b\u0430. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439 \u0432\u043e\u0439\u0442\u0438 \u0441\u043d\u043e\u0432\u0430.');
         history.replaceState(null,'',location.pathname);
       }
     } catch (error) {status(errorText(error),true);}
