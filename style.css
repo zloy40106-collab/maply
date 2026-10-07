@@ -9,3 +9,15 @@ dialog{border:0;border-radius:24px;padding:24px;width:min(440px,calc(100% - 24px
 
 /* Marker voting */
 .pin-popup .vote-counts{font-weight:750;color:#102b46;margin:12px 0 4px}.pin-popup .vote-buttons{display:flex;flex-direction:column;gap:6px;margin-top:10px}.pin-popup .vote-button{margin:0;min-height:44px}.pin-popup .vote-button.selected{background:#e0f3ef;border:2px solid #07887f;color:#066c66}.pin-popup .vote-button[aria-pressed="true"]::before{content:"✓ ";font-weight:800}.pin-popup .vote-hint{font-size:12px;color:#53697a;line-height:1.45;margin-top:10px}
+
+/* Event filters: horizontally scrollable on narrow screens. */
+.event-filters{position:fixed;z-index:1000;top:calc(84px + env(safe-area-inset-top));left:16px;right:16px;display:flex;align-items:center;gap:8px;overflow-x:auto;padding:4px 3px 8px;scrollbar-width:none;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+.filter-button{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:9px 14px;border-radius:22px;font-size:14px;white-space:nowrap;border-color:#d4dfe6;box-shadow:0 3px 12px #102b4615}
+.filter-button.selected{background:#102b46;border-color:#102b46;color:white;box-shadow:0 4px 14px #102b4630}
+.filter-button:focus-visible{outline-offset:1px}
+.filter-button span{font-size:17px;line-height:1}
+.status{top:calc(148px + env(safe-area-inset-top))}
+@media(min-width:640px){.event-filters{left:24px;right:auto;max-width:calc(100% - 48px)}}
+@media(max-height:550px){.event-filters{top:calc(74px + env(safe-area-inset-top))}.status{top:calc(134px + env(safe-area-inset-top));font-size:12px;padding:6px 10px}}
+
+.event-filters::-webkit-scrollbar{display:none}
