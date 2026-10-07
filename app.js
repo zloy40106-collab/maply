@@ -12,7 +12,55 @@
   let placing = false, selectedPoint = null, signingUp = false;
   const pinsById = new Map();
   const pendingVotes = new Set();
+  const FILTER_LABELS = {all:'\u0412\u0441\u0435 \u0441\u043e\u0431\u044b\u0442\u0438\u044f',accident:'\u0410\u0432\u0430\u0440\u0438\u0438',closed:'\u041f\u0435\u0440\u0435\u043a\u0440\u044b\u0442\u0438\u044f',police:'\u041f\u043e\u043b\u0438\u0446\u0438\u044f',pothole:'\u042f\u043c\u044b',custom:'\u0421\u0432\u043e\u044f \u043c\u0435\u0442\u043a\u0430'};
+  let activeFilter = 'all', loadedPins = [], pinsLoaded = false;
+  try {
+    const saved = localStorage.getItem('maply-event-filter');
+    if (Object.prototype.hasOwnProperty.call(FILTER_LABELS,saved)) activeFilter = saved;
+  } catch {}
   let resumeAfterLogin = false, loadNumber = 0, loadTimer, toastTimer, installPrompt;
+
+  function updateFilterButtons() {
+    let selectedButton;
+    document.querySelectorAll('[data-filter]').forEach(button => {
+      const selected = button.dataset.filter === activeFilter;
+      button.classList.toggle('selected',selected);
+      button.setAttribute('aria-pressed',String(selected));
+      if (selected) selectedButton = button;
+    });
+    const nav = $('event-filters');
+    if (nav && selectedButton && (selectedButton.offsetLeft < nav.scrollLeft
+      || selectedButton.offsetLeft + selectedButton.offsetWidth > nav.scrollLeft + nav.clientWidth)) {
+      nav.scrollLeft = Math.max(0,selectedButton.offsetLeft - (nav.clientWidth - selectedButton.offsetWidth) / 2);
+    }
+    $('filter-caption').textContent = FILTER_LABELS[activeFilter].toLocaleLowerCase('ru-RU');
+  }
+  function updateCount() {
+    const count = pinsById.size;
+    const last = count % 10, lastTwo = count % 100;
+    const word = last === 1 && lastTwo !== 11 ? '\u043c\u0435\u0442\u043a\u0430'
+      : last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14) ? '\u043c\u0435\u0442\u043a\u0438' : '\u043c\u0435\u0442\u043e\u043a';
+    $('count').textContent = String(count);
+    $('count-caption').textContent = word + ' \u0432 \u044d\u0442\u043e\u0439 \u043e\u0431\u043b\u0430\u0441\u0442\u0438';
+  }
+  function showPinsStatus() {
+    if (loadedPins.length === 500) {
+      status('\u0417\u0430\u0433\u0440\u0443\u0436\u0435\u043d\u044b 500 \u043f\u043e\u0441\u043b\u0435\u0434\u043d\u0438\u0445 \u043c\u0435\u0442\u043e\u043a. \u041f\u0440\u0438\u0431\u043b\u0438\u0437\u044c \u043a\u0430\u0440\u0442\u0443, \u0447\u0442\u043e\u0431\u044b \u0443\u0432\u0438\u0434\u0435\u0442\u044c \u0431\u043e\u043b\u044c\u0448\u0435.');
+    } else if (pinsById.size) {
+      status(activeFilter === 'all' ? '\u041c\u0435\u0442\u043a\u0438 \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u044b' : '\u0424\u0438\u043b\u044c\u0442\u0440: ' + FILTER_LABELS[activeFilter]);
+    } else {
+      status(activeFilter === 'all' ? '\u0417\u0434\u0435\u0441\u044c \u043f\u043e\u043a\u0430 \u043d\u0435\u0442 \u043c\u0435\u0442\u043e\u043a. \u041c\u043e\u0436\u043d\u043e \u0434\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043f\u0435\u0440\u0432\u0443\u044e.'
+        : '\u041f\u043e \u044d\u0442\u043e\u043c\u0443 \u0444\u0438\u043b\u044c\u0442\u0440\u0443 \u0437\u0434\u0435\u0441\u044c \u043d\u0435\u0442 \u043c\u0435\u0442\u043e\u043a. \u0412\u044b\u0431\u0435\u0440\u0438 \u00ab\u0412\u0441\u0435\u00bb \u0438\u043b\u0438 \u043f\u0435\u0440\u0435\u043c\u0435\u0441\u0442\u0438 \u043a\u0430\u0440\u0442\u0443.');
+    }
+  }
+  function chooseFilter(value) {
+    if (!Object.prototype.hasOwnProperty.call(FILTER_LABELS,value) || value === activeFilter) return;
+    activeFilter = value;
+    try {localStorage.setItem('maply-event-filter',activeFilter);} catch {}
+    updateFilterButtons();
+    if (layer) renderPins(loadedPins);
+    if (pinsLoaded && navigator.onLine && !$('refresh').disabled) showPinsStatus();
+  }
 
   function toast(text) {
     $('toast').textContent = text; $('toast').hidden = false;
@@ -88,7 +136,7 @@
       if (data.hidden_by_votes) {
         const marker = pinsById.get(pin.id);
         if (marker) layer.removeLayer(marker);
-        pinsById.delete(pin.id); $('count').textContent = String(pinsById.size);
+        pinsById.delete(pin.id); loadedPins = loadedPins.filter(item => item.id !== pin.id); updateCount();
         toast('\u0413\u043e\u043b\u043e\u0441 \u0443\u0447\u0442\u0451\u043d. \u041c\u0435\u0442\u043a\u0430 \u0441\u043a\u0440\u044b\u0442\u0430: \u00ab\u043d\u0435\u0442\u00bb \u043d\u0430 3 \u0431\u043e\u043b\u044c\u0448\u0435, \u0447\u0435\u043c \u00ab\u0430\u043a\u0442\u0443\u0430\u043b\u044c\u043d\u043e\u00bb.');
       } else {
         const updated = {active_votes:data.active_votes,gone_votes:data.gone_votes,
@@ -162,6 +210,7 @@
     const openId = [...pinsById.values()].find(marker => marker.isPopupOpen())?.maplyPin.id;
     layer.clearLayers(); pinsById.clear();
     for (const pin of pins) {
+      if (activeFilter !== 'all' && pin.type !== activeFilter) continue;
       if (!Number.isFinite(pin.lat) || !Number.isFinite(pin.lng)) continue;
       const type = TYPES[pin.type] || TYPES.custom;
       const icon = L.divIcon({className:'pin-icon',html:`<div class="pin-badge" style="--pin-color:${type.color}"><span>${type.emoji}</span></div>`,iconSize:[40,40],iconAnchor:[20,40],popupAnchor:[0,-36]});
@@ -169,7 +218,7 @@
         .bindPopup(popupFor(pin)).addTo(layer);
       marker.maplyPin = pin; pinsById.set(pin.id,marker);
     }
-    $('count').textContent = String(pinsById.size);
+    updateCount();
     if (openId && pinsById.has(openId)) pinsById.get(openId).openPopup();
   }
   const wrapLng = lng => ((lng + 180) % 360 + 360) % 360 - 180;
@@ -204,12 +253,17 @@
       }
       if (number !== loadNumber || viewerId !== (user?.id || null)) return;
       for (const pin of pins) pin.my_vote = ownVotes.get(pin.id) || null;
-      renderPins(pins);
-      status(pins.length === 500 ? '\u041f\u043e\u043a\u0430\u0437\u0430\u043d\u044b 500 \u043f\u043e\u0441\u043b\u0435\u0434\u043d\u0438\u0445 \u043c\u0435\u0442\u043e\u043a. \u041f\u0440\u0438\u0431\u043b\u0438\u0437\u044c \u043a\u0430\u0440\u0442\u0443.' : pins.length ? '\u041c\u0435\u0442\u043a\u0438 \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u044b' : '\u0417\u0434\u0435\u0441\u044c \u043f\u043e\u043a\u0430 \u043d\u0435\u0442 \u043c\u0435\u0442\u043e\u043a. \u041c\u043e\u0436\u043d\u043e \u0434\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043f\u0435\u0440\u0432\u0443\u044e.');
+      loadedPins = pins; pinsLoaded = true; renderPins(loadedPins);
+      showPinsStatus();
     } catch (error) {if (number === loadNumber) status(errorText(error),true);}
     finally {if (number === loadNumber) $('refresh').disabled = false;}
   }
   function scheduleLoad() {clearTimeout(loadTimer);loadTimer = setTimeout(loadPins,350);}
+
+  document.querySelectorAll('[data-filter]').forEach(button => {
+    button.addEventListener('click',() => chooseFilter(button.dataset.filter));
+  });
+  updateFilterButtons();
 
   $('add').addEventListener('click',beginPlacement);
   $('cancel-placement').addEventListener('click',cancelPlacement);
@@ -397,7 +451,7 @@
       });
       db.auth.onAuthStateChange((_event,session) => {
         user = session?.user || null; ++loadNumber; updateAccount();
-        for (const marker of pinsById.values()) {marker.maplyPin.my_vote = null; refreshPopup(marker.maplyPin.id);}
+        for (const pin of loadedPins) {pin.my_vote = null; refreshPopup(pin.id);}
         scheduleLoad();
       });
       const {data,error} = await db.auth.getSession();
