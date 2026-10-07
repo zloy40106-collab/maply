@@ -165,7 +165,7 @@
       if (!Number.isFinite(pin.lat) || !Number.isFinite(pin.lng)) continue;
       const type = TYPES[pin.type] || TYPES.custom;
       const icon = L.divIcon({className:'pin-icon',html:`<div class="pin-badge" style="--pin-color:${type.color}"><span>${type.emoji}</span></div>`,iconSize:[40,40],iconAnchor:[20,40],popupAnchor:[0,-36]});
-      const marker = L.marker([pin.lat,pin.lng],{icon,title:pin.title,keyboard:true})
+      const marker = L.marker([pin.lat,pin.lng],{icon,title:pin.title,keyboard:true,draggable:false})
         .bindPopup(popupFor(pin)).addTo(layer);
       marker.maplyPin = pin; pinsById.set(pin.id,marker);
     }
@@ -284,7 +284,7 @@
       const {latitude,longitude,accuracy} = position.coords;
       map.setView([Math.max(-85,Math.min(85,latitude)),longitude],16);
       if (locationLayer) map.removeLayer(locationLayer);
-      locationLayer = L.circle([latitude,longitude],{radius:Math.max(accuracy,8),color:'#397dc5',fillColor:'#397dc5',fillOpacity:.15,weight:2}).addTo(map);
+      locationLayer = L.circle([latitude,longitude],{radius:Math.max(accuracy,8),color:'#397dc5',fillColor:'#397dc5',fillOpacity:.15,weight:2,interactive:false}).addTo(map);
       $('locate').disabled = false;
     },error => {
       $('locate').disabled = false;
@@ -328,7 +328,7 @@
         loadMapResource('script','https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.js')
       ]);
       if (typeof window.maplibregl?.Map !== 'function') throw new Error('MAPLY_MAP_LIBRARY_UNAVAILABLE');
-      await loadMapResource('script','https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js');
+      await loadMapResource('script','https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.3/leaflet-maplibre-gl.js');
       modern = L.maplibreGL({
         style:'https://tiles.openfreemap.org/styles/liberty',
         interactive:false,
