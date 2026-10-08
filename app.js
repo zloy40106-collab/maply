@@ -4,6 +4,7 @@
   const $=id=>document.getElementById(id),C=window.MaplyCategories,settings=window.MaplySettings;
   if(!window.MaplyI18n||!C||!settings||!window.MaplyAPI||!window.MaplyEventCard||!window.MaplyMap||!window.MaplyMarkers){$('status').textContent=t("\u0424\u0430\u0439\u043b\u044b \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u044f \u043d\u0435 \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u043b\u0438\u0441\u044c. \u041e\u0431\u043d\u043e\u0432\u0438 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0443.");return;}
   const TYPES=C.types;let db,user=null,engine,markers,menu,signingUp=false,selectedPoint=null,placing=false,step=1,submitting=false,toastTimer,installPrompt;
+  let journey,draftVersion=0;
   let resumeAfterLogin=false,resumePoint=null,activeFilter='all',activeGroup='all',listController;
   const api=window.MaplyAPI.create(()=>db);
   try{const f=localStorage.getItem('maply-event-filter'),g=localStorage.getItem('maply-event-group');if(f==='all'||Object.hasOwn(TYPES,f))activeFilter=f;if(['all','events','infrastructure'].includes(g))activeGroup=g;}catch{}
@@ -34,7 +35,7 @@
     document.querySelectorAll('[data-filter]').forEach(b=>{b.hidden=b.dataset.filter!=='all'&&!matchesGroup(b.dataset.filter);const on=b.dataset.filter===activeFilter;b.classList.toggle('selected',on);b.setAttribute('aria-pressed',String(on));});
     document.querySelectorAll('[data-group]').forEach(b=>{const on=b.dataset.group===activeGroup;b.classList.toggle('selected',on);b.setAttribute('aria-pressed',String(on));});
     $('reset-filters').hidden=activeGroup==='all'&&activeFilter==='all';$('filter-caption').textContent=activeFilter==='all'?'':', '+TYPES[activeFilter].name;
-    markers?.render();
+    markers?.render();if($('filters-open')){$('filter-control-label').textContent=activeFilter!=='all'?TYPES[activeFilter].name:activeGroup==='events'?t('\u0421\u043e\u0431\u044b\u0442\u0438\u044f'):activeGroup==='infrastructure'?t('\u0418\u043d\u0444\u0440\u0430\u0441\u0442\u0440\u0443\u043a\u0442\u0443\u0440\u0430'):t('\u0424\u0438\u043b\u044c\u0442\u0440\u044b');$('filters-open').classList.toggle('selected',activeFilter!=='all'||activeGroup!=='all');}
   }
   function chooseFilter(value){if(value!=='all'&&!Object.hasOwn(TYPES,value))return;if(value!=='all'&&!matchesGroup(value))activeGroup='all';activeFilter=value;applyFilters();}
   function buildCategories(){
@@ -42,24 +43,25 @@
     const addFilter=(key,name,emoji,color)=>{const b=document.createElement('button');b.type='button';b.className='filter-button';b.dataset.filter=key;b.style.setProperty('--category',color);const i=document.createElement('span');i.textContent=emoji;i.setAttribute('aria-hidden','true');b.append(i,document.createTextNode(name));b.addEventListener('click',()=>chooseFilter(key));nav.append(b);};
     addFilter('all',t("\u0412\u0441\u0435"),'','#102b46');for(const [key,type]of Object.entries(TYPES))addFilter(key,type.name,type.emoji,type.color);
     const grid=$('category-grid');grid.replaceChildren();const supported=api.features().extended?Object.keys(TYPES):C.legacy;
-    for(const [key,type]of Object.entries(TYPES)){const b=document.createElement('button');b.type='button';b.className='category-choice';b.style.setProperty('--category',type.color);b.dataset.category=key;b.disabled=!supported.includes(key);b.textContent=type.emoji+' '+type.name+(b.disabled?' \u00b7 '+t("\u0421\u043a\u043e\u0440\u043e"):'');b.setAttribute('aria-pressed',String($('type').value===key));b.addEventListener('click',()=>{$('type').value=key;document.querySelectorAll('[data-category]').forEach(n=>n.setAttribute('aria-pressed',String(n.dataset.category===key)));});grid.append(b);}
+    for(const [key,type]of Object.entries(TYPES)){const b=document.createElement('button');b.type='button';b.className='category-choice';b.style.setProperty('--category',type.color);b.dataset.category=key;b.disabled=!supported.includes(key);b.textContent=type.emoji+' '+type.name+(b.disabled?' \u00b7 '+t("\u0421\u043a\u043e\u0440\u043e"):'');b.setAttribute('aria-pressed',String($('type').value===key));b.addEventListener('click',()=>{$('type').value=key;if(key==='custom')$('pin-details').open=true;document.querySelectorAll('[data-category]').forEach(n=>n.setAttribute('aria-pressed',String(n.dataset.category===key)));});grid.append(b);}
     $('happening-now-row').hidden=!api.features().extended;
     $('category-note').hidden=api.features().extended;applyFilters();
   }
-  function showStep(value){step=value;document.querySelectorAll('[data-step]').forEach(n=>{n.hidden=Number(n.dataset.step)!==step;});$('pin-title').textContent=['',t("\u0427\u0442\u043e \u043f\u0440\u043e\u0438\u0437\u043e\u0448\u043b\u043e?"),t("\u0413\u0434\u0435 \u043f\u0440\u043e\u0438\u0437\u043e\u0448\u043b\u043e?"),t("\u0414\u0435\u0442\u0430\u043b\u0438 \u0441\u043e\u0431\u044b\u0442\u0438\u044f")][step];$('step-caption').textContent=t("\u0428\u0430\u0433 {step} \u0438\u0437 3",{step});$('pin-back').hidden=step===1;$('pin-next').hidden=step===3;$('pin-submit').hidden=step!==3;message('pin-message','');updatePoint();}
+  function showStep(){step=3;document.querySelectorAll('[data-step]').forEach(n=>{n.hidden=false;});$('pin-title').textContent=t('\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0441\u043e\u0431\u044b\u0442\u0438\u0435');$('step-caption').textContent='';$('pin-back').hidden=true;$('pin-next').hidden=true;$('pin-submit').hidden=false;message('pin-message','');updatePoint();}
   function updatePoint(){
-    $('coordinates').textContent=selectedPoint?t("\u0412\u044b\u0431\u0440\u0430\u043d\u043e \u043c\u0435\u0441\u0442\u043e: {lat}, {lng}",{lat:selectedPoint.lat.toFixed(5),lng:wrap(selectedPoint.lng).toFixed(5)}):t("\u0412\u044b\u0431\u0435\u0440\u0438 \u043c\u0435\u0441\u0442\u043e \u043d\u0430 \u043a\u0430\u0440\u0442\u0435 \u0438\u043b\u0438 \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0439 \u0433\u0435\u043e\u043b\u043e\u043a\u0430\u0446\u0438\u044e.");
-    engine?.selectPoint(placing?selectedPoint:null);
+    $('coordinates').textContent=selectedPoint?t('\u041c\u0435\u0441\u0442\u043e \u0432\u044b\u0431\u0440\u0430\u043d\u043e. \u041c\u043e\u0436\u043d\u043e \u0438\u0437\u043c\u0435\u043d\u0438\u0442\u044c \u043d\u0430 \u043a\u0430\u0440\u0442\u0435.'):t("\u0412\u044b\u0431\u0435\u0440\u0438 \u043c\u0435\u0441\u0442\u043e \u043d\u0430 \u043a\u0430\u0440\u0442\u0435 \u0438\u043b\u0438 \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0439 \u0433\u0435\u043e\u043b\u043e\u043a\u0430\u0446\u0438\u044e.");
+    engine?.selectPoint(placing?selectedPoint:null);if(!submitting)$('pin-submit').disabled=!selectedPoint;
   }
   function cancelPlacement(){placing=false;$('placement').hidden=true;document.body.classList.remove('placing');engine?.selectPoint(null);}
-  function closeDraft(){if(submitting)return;cancelPlacement();selectedPoint=null;$('pin-dialog').close();}
+  function closeDraft(){if(submitting)return;++draftVersion;cancelPlacement();selectedPoint=null;$('pin-dialog').close();}
   function beginPlacement(point=null){
     if(submitting)return;
     if(!navigator.onLine)return toast(t("\u0414\u043b\u044f \u043f\u0443\u0431\u043b\u0438\u043a\u0430\u0446\u0438\u0438 \u043d\u0443\u0436\u0435\u043d \u0438\u043d\u0442\u0435\u0440\u043d\u0435\u0442."));if(!db||!engine)return toast(t("\u041f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435 \u0435\u0449\u0451 \u0437\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u0442\u0441\u044f. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439 \u0447\u0435\u0440\u0435\u0437 \u043d\u0435\u0441\u043a\u043e\u043b\u044c\u043a\u043e \u0441\u0435\u043a\u0443\u043d\u0434."));
     if(!user){resumeAfterLogin=true;resumePoint=point;message('auth-message',t("\u0412\u043e\u0439\u0434\u0438, \u0447\u0442\u043e\u0431\u044b \u0434\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0441\u043e\u0431\u044b\u0442\u0438\u0435."));$('auth-dialog').showModal();return;}
-    markers?.close();cancelPlacement();$('pin-form').reset();$('type').value='accident';
-    const geo=engine.location();selectedPoint=point||(geo&&Date.now()-geo.timestamp<300000?{lat:geo.lat,lng:geo.lng}:null);
-    buildCategories();showStep(1);$('pin-dialog').showModal();
+    markers?.close();cancelPlacement();$('pin-form').reset();$('type').value='accident';try{const last=localStorage.getItem('maply-last-category');if(Object.hasOwn(TYPES,last)&&(api.features().extended||C.legacy.includes(last)))$('type').value=last;}catch{}
+    const geo=engine.location();selectedPoint=point||(geo&&Date.now()-geo.timestamp<60000&&geo.accuracy<=100?{lat:geo.lat,lng:geo.lng}:null);
+    const version=++draftVersion;buildCategories();showStep();$('pin-details').open=$('type').value==='custom';$('pin-dialog').showModal();
+    if(!selectedPoint){message('pin-message',t('\u041e\u043f\u0440\u0435\u0434\u0435\u043b\u044f\u0435\u043c \u043c\u0435\u0441\u0442\u043e. \u041c\u043e\u0436\u043d\u043e \u0432\u044b\u0431\u0440\u0430\u0442\u044c \u0442\u043e\u0447\u043a\u0443 \u043d\u0430 \u043a\u0430\u0440\u0442\u0435.'));engine.requestLocation(false,false).then(location=>{if(version!==draftVersion||!$('pin-dialog').open||selectedPoint||!location)return;if(location.accuracy>100)return message('pin-message',t('\u0422\u043e\u0447\u043d\u043e\u0435 \u043c\u0435\u0441\u0442\u043e\u043f\u043e\u043b\u043e\u0436\u0435\u043d\u0438\u0435 \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u043d\u043e. \u0412\u044b\u0431\u0435\u0440\u0438 \u043c\u0435\u0441\u0442\u043e \u043d\u0430 \u043a\u0430\u0440\u0442\u0435.'));selectedPoint={lat:location.lat,lng:location.lng};updatePoint();message('pin-message',t('\u041c\u0435\u0441\u0442\u043e\u043f\u043e\u043b\u043e\u0436\u0435\u043d\u0438\u0435 \u0432\u044b\u0431\u0440\u0430\u043d\u043e.'),true);});}
   }
   function updateAccount(){
     $('account').textContent=user?t("\u0410\u043a\u043a\u0430\u0443\u043d\u0442"):t("\u041c\u0435\u043d\u044e");menu?.profile();$('auth-title').textContent=user?t("\u041f\u0440\u043e\u0444\u0438\u043b\u044c"):signingUp?t("\u0421\u043e\u0437\u0434\u0430\u0442\u044c \u0430\u043a\u043a\u0430\u0443\u043d\u0442"):t("\u0412\u0445\u043e\u0434 \u0432 Maply");
@@ -90,6 +92,7 @@
   settings.subscribe(()=>{engine?.settingsChanged();markers?.render();if(displayedLanguage!==window.MaplyI18n.language()){displayedLanguage=window.MaplyI18n.language();buildCategories();updateAccount();if($('pin-dialog').open||placing)showStep(step);}});
   document.querySelectorAll('[data-group]').forEach(b=>b.addEventListener('click',()=>{activeGroup=b.dataset.group;activeFilter='all';applyFilters();}));
   $('reset-filters').addEventListener('click',()=>{activeGroup='all';activeFilter='all';applyFilters();});
+  $('filters-open').addEventListener('click',()=>{const panel=document.querySelector('.filter-shell');panel.hidden=!panel.hidden;$('filters-open').setAttribute('aria-expanded',String(!panel.hidden));sizeUI();});
   $('account').addEventListener('click',()=>menu.open());$('add').addEventListener('click',()=>beginPlacement());
   $('empty-add').addEventListener('click',()=>beginPlacement());$('summary-button').addEventListener('click',()=>openList());
   $('refresh').addEventListener('click',async()=>{if(await markers?.load())toast(t("\u0421\u043e\u0431\u044b\u0442\u0438\u044f \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u044b."));});
@@ -103,12 +106,12 @@
   $('list-dialog').addEventListener('close',()=>listController?.abort());
   $('pin-back').addEventListener('click',()=>showStep(Math.max(1,step-1)));
   $('pin-next').addEventListener('click',()=>{if(step===2&&!selectedPoint)return message('pin-message',t("\u0421\u043d\u0430\u0447\u0430\u043b\u0430 \u0432\u044b\u0431\u0435\u0440\u0438 \u043c\u0435\u0441\u0442\u043e \u0441\u043e\u0431\u044b\u0442\u0438\u044f."));showStep(step+1);});
-  $('choose-map').addEventListener('click',()=>{$('pin-dialog').close();placing=true;$('placement').hidden=false;document.body.classList.add('placing');updatePoint();});
+  $('choose-map').addEventListener('click',()=>{++draftVersion;$('pin-dialog').close();placing=true;$('placement').hidden=false;document.body.classList.add('placing');updatePoint();});
   $('confirm-place').addEventListener('click',()=>{if(!selectedPoint)return toast(t("\u041d\u0430\u0436\u043c\u0438 \u043d\u0430 \u043a\u0430\u0440\u0442\u0443 \u0432 \u043c\u0435\u0441\u0442\u0435 \u0441\u043e\u0431\u044b\u0442\u0438\u044f."));cancelPlacement();showStep(2);$('pin-dialog').showModal();});
   $('cancel-placement').addEventListener('click',()=>{cancelPlacement();showStep(2);$('pin-dialog').showModal();});
   $('use-location').addEventListener('click',async()=>{$('use-location').disabled=true;try{const geo=await engine?.requestLocation(false,false);if(geo){selectedPoint={lat:geo.lat,lng:geo.lng};updatePoint();message('pin-message',t("\u041c\u0435\u0441\u0442\u043e\u043f\u043e\u043b\u043e\u0436\u0435\u043d\u0438\u0435 \u0432\u044b\u0431\u0440\u0430\u043d\u043e."),true);}else message('pin-message',t("\u0412\u044b\u0431\u0435\u0440\u0438 \u043c\u0435\u0441\u0442\u043e \u0432\u0440\u0443\u0447\u043d\u0443\u044e \u043d\u0430 \u043a\u0430\u0440\u0442\u0435."));}finally{$('use-location').disabled=false;}});
   $('pin-form').addEventListener('submit',async e=>{
-    e.preventDefault();if(submitting)return;if(step!==3){$('pin-next').click();return;}
+    e.preventDefault();if(submitting)return;
     if(!db||!user||!selectedPoint)return message('pin-message',t("\u0412\u043e\u0439\u0434\u0438 \u0438 \u0432\u044b\u0431\u0435\u0440\u0438 \u043c\u0435\u0441\u0442\u043e \u0441\u043e\u0431\u044b\u0442\u0438\u044f."));if(!navigator.onLine)return message('pin-message',t("\u0414\u043b\u044f \u043f\u0443\u0431\u043b\u0438\u043a\u0430\u0446\u0438\u0438 \u043d\u0443\u0436\u0435\u043d \u0438\u043d\u0442\u0435\u0440\u043d\u0435\u0442."));
     const type=$('type').value,title=$('title').value.trim()||(type==='custom'?'':TYPES[type]?.name),description=$('description').value.trim();
     if(!title||title.length>80)return message('pin-message',t("\u0423\u043a\u0430\u0436\u0438 \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u0434\u043e 80 \u0441\u0438\u043c\u0432\u043e\u043b\u043e\u0432."));if(description.length>200)return message('pin-message',t("\u041e\u043f\u0438\u0441\u0430\u043d\u0438\u0435 \u0434\u043e\u043b\u0436\u043d\u043e \u0431\u044b\u0442\u044c \u043d\u0435 \u0434\u043b\u0438\u043d\u043d\u0435\u0435 200 \u0441\u0438\u043c\u0432\u043e\u043b\u043e\u0432."));
@@ -118,9 +121,9 @@
     try{
       const pin=await api.publish({user_id:user.id,type,title,description,lat:point.lat,lng:point.lng,happening_now:$('happening-now').checked});
       $('pin-dialog').close();selectedPoint=null;cancelPlacement();settings.set('showOld',true);settings.set('enabledTypes',Array.from(new Set([...settings.get().enabledTypes,type])));chooseFilter(type);engine.map.setView([point.lat,point.lng],16,{animate:false});
-      toast(t("\u0421\u043e\u0431\u044b\u0442\u0438\u0435 \u043e\u043f\u0443\u0431\u043b\u0438\u043a\u043e\u0432\u0430\u043d\u043e."));if(pin)markers.adopt(pin);await markers.load();if(pin)markers.open(pin.id);
+      try{localStorage.setItem('maply-last-category',type);}catch{}toast(t("\u0421\u043e\u0431\u044b\u0442\u0438\u0435 \u043e\u043f\u0443\u0431\u043b\u0438\u043a\u043e\u0432\u0430\u043d\u043e."));if(pin)markers.adopt(pin);await markers.load();if(pin)markers.open(pin.id);
     }catch(error){message('pin-message',errorText(error));}
-    finally{submitting=false;controls.forEach((n,i)=>{n.disabled=states[i];});$('pin-submit').textContent=t("\u041e\u043f\u0443\u0431\u043b\u0438\u043a\u043e\u0432\u0430\u0442\u044c \u0441\u043e\u0431\u044b\u0442\u0438\u0435");$('pin-form').setAttribute('aria-busy','false');}
+    finally{submitting=false;controls.forEach((n,i)=>{n.disabled=states[i];});updatePoint();$('pin-submit').textContent=t("\u041e\u043f\u0443\u0431\u043b\u0438\u043a\u043e\u0432\u0430\u0442\u044c \u0441\u043e\u0431\u044b\u0442\u0438\u0435");$('pin-form').setAttribute('aria-busy','false');}
   });
   $('report-form').addEventListener('submit',async e=>{
     e.preventDefault();if($('report-submit').disabled)return;if(!user)return openLogin(t("\u0412\u043e\u0439\u0434\u0438, \u0447\u0442\u043e\u0431\u044b \u043e\u0442\u043f\u0440\u0430\u0432\u0438\u0442\u044c \u0436\u0430\u043b\u043e\u0431\u0443."));if(!navigator.onLine)return message('report-message',t("\u0414\u043b\u044f \u043e\u0442\u043f\u0440\u0430\u0432\u043a\u0438 \u043d\u0443\u0436\u0435\u043d \u0438\u043d\u0442\u0435\u0440\u043d\u0435\u0442."));
@@ -161,7 +164,7 @@
     db=window.supabase.createClient(config.url,config.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'implicit'}});
     db.auth.onAuthStateChange((_e,session)=>{user=session?.user||null;updateAccount();markers.authChanged();});
     const {data,error}=await db.auth.getSession();if(error)throw error;user=data.session?.user||null;updateAccount();
-    try{await api.detect();}catch{}buildCategories();
+    try{await api.detect();}catch{}buildCategories();journey=window.MaplyJourney.create({engine,api,getUser:()=>user,notify:toast,openEvent:pin=>{markers.close();engine.map.setView([pin.lat,pin.lng],16,{animate:false});markers.adopt(pin);}});window.MaplyAppJourney=journey;
     await markers.load();engine.requestLocation(true);
     setInterval(()=>{if(document.hidden)return;markers.expire();if(settings.get().autoRefresh)markers.load();},30000);
     if(location.hash.includes('error')){toast(t("\u0421\u0441\u044b\u043b\u043a\u0430 \u0434\u043b\u044f \u0432\u0445\u043e\u0434\u0430 \u0443\u0441\u0442\u0430\u0440\u0435\u043b\u0430. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439 \u0432\u043e\u0439\u0442\u0438 \u0441\u043d\u043e\u0432\u0430."));history.replaceState(null,'',location.pathname);}
