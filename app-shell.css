@@ -1,0 +1,22 @@
+/* Mobile panels and controls; keep the existing map and event styling. */
+body{-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
+.topbar .brand{user-select:none}.topbar button,.map-tools button,.zoom-tools button,.add-fab{touch-action:manipulation}
+.map-tools button,.zoom-tools button{border-color:color-mix(in srgb,var(--border) 70%,transparent);box-shadow:0 3px 14px #102b4620}
+.bottom-bar .map-summary{border-radius:18px}.add-fab{border-radius:20px;box-shadow:0 7px 22px #07887f42}
+.filter-button{max-width:240px}.filter-button.selected{box-shadow:0 4px 14px #102b4620}.group-button{padding-inline:6px}
+.event-actions button{white-space:normal;overflow-wrap:anywhere}.event-description{line-height:1.6}
+.settings-section h2{letter-spacing:.02em}.setting-toggle strong{font-weight:600}.menu-action{background:var(--surface-soft);border-color:transparent}
+#setting-language{font-weight:650;border:2px solid var(--accent)}
+dialog .dialog-heading{position:sticky;top:-20px;background:var(--surface);z-index:2;padding:12px 0;margin-top:-12px;border-bottom:1px solid var(--border)}
+.event-dialog .dialog-heading{top:0;margin-top:0;padding-top:4px}.menu-dialog .settings-section:first-of-type{border-top:0;margin-top:12px}
+.list-event{background:var(--surface-soft);border-color:transparent;text-align:left}.category-choice[aria-pressed="true"]{box-shadow:0 0 0 1px var(--category)}
+@media(max-width:639px){
+  #menu-dialog,#types-dialog,#list-dialog,#auth-dialog,#report-dialog{position:fixed;inset:auto 0 var(--keyboard-inset);margin:0 auto;width:100%;max-width:520px;max-height:calc(var(--viewport-height) - 20px - env(safe-area-inset-top));border-radius:26px 26px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));box-shadow:0 -8px 40px #061b2a33}
+  #menu-dialog::before,#types-dialog::before,#list-dialog::before,#auth-dialog::before,#report-dialog::before{content:"";display:block;width:36px;height:4px;border-radius:8px;background:var(--border);margin:-10px auto 20px}
+  dialog[open]{animation:maply-sheet-in .18s ease-out}
+  #menu-dialog .dialog-heading,#types-dialog .dialog-heading,#list-dialog .dialog-heading,#auth-dialog .dialog-heading,#report-dialog .dialog-heading{top:-22px}
+  .toast{max-width:calc(100% - 24px);border-radius:18px}
+}
+@media(display-mode:standalone){body{overscroll-behavior:none}.topbar .brand{box-shadow:0 3px 16px #102b4614}}
+@keyframes maply-sheet-in{from{transform:translateY(24px);opacity:.65}to{transform:translateY(0);opacity:1}}
+@media(prefers-reduced-motion:reduce){dialog[open]{animation:none}}
