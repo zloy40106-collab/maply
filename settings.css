@@ -1,1 +1,41 @@
-
+/* Account menu and appearance preferences. */
+.menu-dialog{width:min(480px,calc(100% - 24px))}
+.menu-profile{padding:14px;background:#edf6f4;border-radius:16px;margin:18px 0}
+.menu-profile p{margin:0 0 12px;font-size:14px;line-height:1.45;overflow-wrap:anywhere}
+.menu-profile .primary{min-height:44px;font-size:14px}
+.settings-section{margin:22px 0;padding-top:18px;border-top:1px solid #dde7ed}
+.settings-section h2{font-size:17px;margin:0 0 12px;letter-spacing:-.2px}
+.settings-section>label:not(.setting-toggle){font-size:14px;margin-top:14px}
+.setting-toggle{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0;padding:12px 0;cursor:pointer}
+.setting-toggle>span{flex:1;min-width:0}.setting-toggle strong{display:block;font-size:14px;font-weight:650;line-height:1.4}
+.setting-toggle small{display:block;margin-top:4px;font-size:12px;line-height:1.45;color:#53697a}
+.setting-toggle input{width:22px;height:22px;min-height:22px;flex:0 0 22px;margin:0;padding:0;accent-color:#07887f;cursor:pointer}
+.menu-action{width:100%;font-size:14px;min-height:44px;margin-top:10px}
+.menu-help{margin-top:18px;border-top:1px solid #dde7ed;padding-top:8px}
+.menu-help summary{font-size:14px;font-weight:650;cursor:pointer;min-height:44px;padding:12px 0}
+.menu-help p{font-size:13px;line-height:1.5;color:#53697a}.settings-note{text-align:center;font-size:12px;margin-bottom:0}
+html[data-theme="dark"]{color-scheme:dark;color:#e5eef7;background:#111c29}
+html[data-theme="dark"] button,html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea{background:#1d2d3e;color:#e5eef7;border-color:#3c5165}
+html[data-theme="dark"] .brand,html[data-theme="dark"] .status,html[data-theme="dark"] .group-switch,html[data-theme="dark"] .bottom-bar .map-summary,html[data-theme="dark"] dialog,html[data-theme="dark"] .leaflet-popup-content-wrapper,html[data-theme="dark"] .leaflet-popup-tip{background:#172638;color:#e5eef7}
+html[data-theme="dark"] .brand-mark{background:#0c1722;color:white}
+html[data-theme="dark"] .primary,html[data-theme="dark"] .add-fab{background:#07887f;border-color:#07887f;color:white}
+html[data-theme="dark"] .primary:hover,html[data-theme="dark"] .add-fab:hover{background:#0a9c91}
+html[data-theme="dark"] .group-button.selected{background:#315b7b;color:white}
+html[data-theme="dark"] .filter-button.selected{color:white}
+html[data-theme="dark"] .filter-button[data-filter="all"].selected{background:#315b7b;border-color:#315b7b}
+html[data-theme="dark"] .small,html[data-theme="dark"] .pin-popup time,html[data-theme="dark"] .pin-popup .pin-author,html[data-theme="dark"] .pin-popup .vote-hint,html[data-theme="dark"] .setting-toggle small,html[data-theme="dark"] .menu-help p{color:#bdcddd}
+html[data-theme="dark"] .status.error,html[data-theme="dark"] .message{color:#ffb4b4}
+html[data-theme="dark"] .message.success{color:#9ce5d3}
+html[data-theme="dark"] .pin-popup .meta-cell{background:#22384b}
+html[data-theme="dark"] .pin-popup .meta-label{color:#bdcddd}
+html[data-theme="dark"] .pin-popup .vote-counts,html[data-theme="dark"] .menu-profile{background:#193a38;color:#d9f1eb}
+html[data-theme="dark"] .pin-popup .vote-button.selected{background:#15554c;border-color:#65c5b2;color:#e0fff8}
+html[data-theme="dark"] .pin-popup .age-note{background:#4b3920;color:#ffe5ad}
+html[data-theme="dark"] .pin-popup .life-track{background:#354c61}
+html[data-theme="dark"] .settings-section,html[data-theme="dark"] .menu-help{border-color:#35495d}
+html[data-theme="dark"] .install{background:#193a38;color:#d9f1eb;border-color:#35685f}
+html[data-theme="dark"] .leaflet-control-zoom a{background:#172638;color:#e5eef7}
+html[data-theme="dark"] .leaflet-control-zoom a:hover{background:#253c50}
+html[data-theme="dark"] .leaflet-bottom.leaflet-right .leaflet-control-attribution{background:rgba(23,38,56,.94);color:#cfdeeb}
+html[data-theme="dark"] .leaflet-control-attribution a,html[data-theme="dark"] .leaflet-popup-content a{color:#9fdbff}
+html[data-theme="dark"] .leaflet-container a.leaflet-popup-close-button{color:#d9e7f4}
