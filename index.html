@@ -12,16 +12,20 @@
   <link rel="icon" type="image/png" href="/api/icon?size=192">
   <link rel="apple-touch-icon" href="/api/icon?size=192">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="/style.css?v=maply-ui-2">
+  <link rel="stylesheet" href="/style.css?v=maply-settings-3">
+  <link rel="stylesheet" href="/settings.css?v=maply-settings-3">
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.js"></script>
-  <script defer src="/app.js?v=maply-ui-2"></script>
+  <script defer src="/settings.js?v=maply-settings-3"></script>
+  <script defer src="/map.js?v=maply-settings-3"></script>
+  <script defer src="/markers.js?v=maply-settings-3"></script>
+  <script defer src="/app.js?v=maply-settings-3"></script>
 </head>
 <body>
   <div id="map" aria-label="Карта дорожных событий"></div>
   <header class="topbar">
     <a class="brand" href="/" aria-label="Maply, главная"><span class="brand-mark">M</span>Maply</a>
-    <button id="account" class="compact" type="button">Войти</button>
+    <button id="account" class="compact" type="button">Меню</button>
   </header>
   <section class="filter-shell" aria-label="Выбор дорожных событий">
     <div class="filter-heading">
@@ -54,6 +58,32 @@
     <p class="map-summary" aria-live="polite" aria-atomic="true"><span id="count">0</span> <span id="count-caption">меток в этой области</span><span id="filter-caption" class="sr-only">все события</span></p>
     <button id="add" class="add-fab" type="button" aria-label="Добавить метку" title="Добавить метку: нажми + или удерживай место на карте">+</button>
   </footer>
+  <dialog id="menu-dialog" class="menu-dialog" aria-labelledby="menu-title">
+    <div class="dialog-heading"><h1 id="menu-title">Меню Maply</h1><button class="close" data-close="menu-dialog" aria-label="Закрыть меню" type="button">×</button></div>
+    <section class="menu-profile">
+      <p id="menu-user">Ты смотришь карту как гость</p>
+      <button id="menu-auth" class="primary" type="button">Войти или зарегистрироваться</button>
+    </section>
+    <section class="settings-section" aria-labelledby="appearance-title">
+      <h2 id="appearance-title">Внешний вид</h2>
+      <label for="setting-theme">Тема приложения</label>
+      <select id="setting-theme"><option value="light">Обычная</option><option value="dark">Тёмная</option><option value="system">Как на устройстве</option></select>
+      <label for="setting-mapStyle">Вид карты</label>
+      <select id="setting-mapStyle"><option value="auto">По теме приложения</option><option value="liberty">Обычная, цветная</option><option value="positron">Светлая, спокойная</option><option value="dark">Тёмная</option></select>
+      <p class="small">Тему кнопок и вид карты можно выбирать отдельно.</p>
+    </section>
+    <section class="settings-section" aria-labelledby="map-settings-title">
+      <h2 id="map-settings-title">Карта и события</h2>
+      <label class="setting-toggle" for="setting-autoLocate"><span><strong>Моё место при открытии</strong><small>Одно определение позиции при запуске.</small></span><input id="setting-autoLocate" type="checkbox" checked></label>
+      <label class="setting-toggle" for="setting-autoRefresh"><span><strong>Обновлять каждые 30 секунд</strong><small>При перемещении карты и по кнопке метки обновляются в любом случае.</small></span><input id="setting-autoRefresh" type="checkbox" checked></label>
+      <label class="setting-toggle" for="setting-fadeOld"><span><strong>Приглушать старые события</strong><small>Аварии, полиция и перекрытия старше часа. Ямы сохраняют яркость.</small></span><input id="setting-fadeOld" type="checkbox" checked></label>
+      <button id="menu-reset-filters" class="menu-action" type="button">Показать все типы меток</button>
+    </section>
+    <button id="install" class="install" type="button" hidden>Установить Maply</button>
+    <details class="menu-help"><summary>Как пользоваться Maply</summary><p>Нажми «+» и выбери место или удерживай палец на карте. Для публикации и голосования нужен вход.</p><p>Метка живёт 24 часа. Первое «Ещё актуально» от каждого пользователя добавляет 2 часа. При перевесе «Уже нет» на 3 метка скрывается.</p></details>
+    <button id="settings-reset" class="text-button" type="button">Вернуть обычные настройки</button>
+    <p class="small settings-note">Настройки сохраняются на этом устройстве.</p>
+  </dialog>
   <dialog id="auth-dialog" aria-labelledby="auth-title">
     <div class="dialog-heading"><h1 id="auth-title">Вход в Maply</h1><button class="close" data-close="auth-dialog" aria-label="Закрыть" type="button">×</button></div>
     <div id="signed-in" hidden><p>Ты вошёл как <strong id="user-email"></strong></p><button id="logout" type="button">Выйти</button></div>
@@ -65,7 +95,6 @@
       <button id="auth-submit" class="primary" type="submit">Войти</button>
       <button id="auth-switch" class="text-button" type="button">Нет аккаунта? Зарегистрироваться</button>
     </form>
-    <button id="install" class="install" type="button" hidden>Установить Maply</button>
     <p id="auth-message" class="message" role="status"></p>
   </dialog>
   <dialog id="pin-dialog" aria-labelledby="pin-title">
