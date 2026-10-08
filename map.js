@@ -19,17 +19,19 @@
   }
   async function create({notify,status,getSettings,getStyle,onMove,onClick,onLongPress,onLocation}) {
     let gl,leaflet,layer,locationLayer,pins=[],selected=null,geo=null,locationRequest=0,viewVersion=0,autoPending=false;
+    let quietMove=false;
+    let routeCoordinates=null,routeDestination=null,routeLayer=null,place=null,placeMarker=null;
     let pick=()=>{},styleTimer,styleVersion=0,desired=getStyle(),ready=false;
     const start=view();
     const map={
       getBounds:()=> (gl||leaflet).getBounds(),getCenter:()=> (gl||leaflet).getCenter(),getZoom:()=> (gl||leaflet).getZoom(),
-      setView(point,zoom,options={}){if(gl){const camera={center:[point[1],point[0]],zoom:zoom??gl.getZoom(),duration:350};if(options.animate===false)gl.jumpTo(camera);else gl.easeTo(camera);}else leaflet.setView(point,zoom??leaflet.getZoom(),options);return map;},
+      setView(point,zoom,options={}){quietMove=Boolean(options.silent);if(gl){const camera={center:[point[1],point[0]],zoom:zoom??gl.getZoom(),duration:350};if(options.animate===false)gl.jumpTo(camera);else gl.easeTo(camera);}else leaflet.setView(point,zoom??leaflet.getZoom(),options);return map;},
       closePopup(){},getBearing:()=>gl?gl.getBearing():0
     };
-    function persist() {
+    function persist(event) {
       const p=map.getCenter();try{localStorage.setItem('maply-map-view',JSON.stringify({lat:p.lat,lng:wrap(p.lng),zoom:map.getZoom()}));}catch{}
       if(gl){$('compass-arrow').style.transform=`rotate(${-gl.getBearing()}deg)`;$('compass').setAttribute('aria-label',t("\u0421\u0435\u0432\u0435\u0440 \u0441\u0432\u0435\u0440\u0445\u0443. \u041f\u043e\u0432\u043e\u0440\u043e\u0442 {degrees} \u0433\u0440\u0430\u0434\u0443\u0441\u043e\u0432",{degrees:Math.round(gl.getBearing())}));}
-      onMove();
+      const silent=quietMove&&!event?.originalEvent;quietMove=false;if(!silent)onMove();
     }
     function icon(type,confirmed=false) {
       const canvas=document.createElement('canvas');canvas.width=canvas.height=72;const ctx=canvas.getContext('2d');
@@ -50,7 +52,7 @@
         gl.addLayer({id:'maply-confirmed',type:'circle',source:'maply-events',filter:['all',['!',['has','point_count']],['==',['get','confirmed'],true]],paint:{'circle-color':'#d9f5ed','circle-radius':21,'circle-stroke-color':'#06766f','circle-stroke-width':2,'circle-opacity':['get','opacity'],'circle-stroke-opacity':['get','opacity']}});
         gl.addLayer({id:'maply-pins',type:'symbol',source:'maply-events',filter:['!',['has','point_count']],layout:{'icon-image':['get','icon'],'icon-size':1,'icon-allow-overlap':true},paint:{'icon-opacity':['get','opacity']}});
       }else gl.getSource('maply-events').setData(eventsData());
-      drawLocation();drawSelection();
+      drawLocation();drawSelection();drawRoute();drawPlace();
     }
     function drawLocation() {
       if(!geo)return;
@@ -82,6 +84,28 @@
       for(const p of pins){const t=C.types[p.type]||C.types.custom;const el=document.createElement('button');el.className='fallback-pin';el.textContent=t.emoji+(Number(p.active_votes)>0?' \u2713':'');el.style.borderColor=t.color;el.style.opacity=String(p.maplyOpacity??1);el.setAttribute('aria-label',t.name+': '+p.title);el.addEventListener('click',e=>{e.stopPropagation();pick(p.id);});
         const marker=L.marker([p.lat,p.lng],{draggable:false,icon:L.divIcon({className:'pin-icon',html:el,iconSize:[44,44],iconAnchor:[22,22]})}).addTo(layer);marker.on('click',()=>pick(p.id));}
     }
+
+    function drawRoute(){
+      if(!gl){if(routeLayer){leaflet.removeLayer(routeLayer);routeLayer=null;}if(routeCoordinates)routeLayer=L.polyline(routeCoordinates.map(p=>[p[1],p[0]]),{color:'#07887f',weight:6,opacity:.95,interactive:false}).addTo(leaflet);return;}
+      if(!ready)return;
+      const data={type:'FeatureCollection',features:routeCoordinates?[{type:'Feature',geometry:{type:'LineString',coordinates:routeCoordinates},properties:{}}]:[]};
+      if(gl.getSource('maply-route'))gl.getSource('maply-route').setData(data);
+      else{gl.addSource('maply-route',{type:'geojson',data});gl.addLayer({id:'maply-route-outline',type:'line',source:'maply-route',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#fff','line-width':10}},'maply-clusters');gl.addLayer({id:'maply-route-line',type:'line',source:'maply-route',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#07887f','line-width':6}},'maply-clusters');}
+    }
+    function drawPlace(){
+      placeMarker?.remove();placeMarker=null;if(!place)return;
+      const node=document.createElement('div');node.className='destination-pin';node.textContent='\ud83d\udccd';node.setAttribute('aria-label',place.name);
+      if(gl)placeMarker=new maplibregl.Marker({element:node,draggable:false}).setLngLat([place.lng,place.lat]).addTo(gl);
+      else placeMarker=L.marker([place.lat,place.lng],{draggable:false,icon:L.divIcon({className:'pin-icon',html:node,iconSize:[44,44],iconAnchor:[22,40]})}).addTo(leaflet);
+    }
+    function setRoute(coordinates,destination,fit=false){
+      routeCoordinates=coordinates;routeDestination=destination;drawRoute();
+      if(!fit||!coordinates?.length)return;
+      let west=180,east=-180,south=85,north=-85;for(const p of coordinates){west=Math.min(west,p[0]);east=Math.max(east,p[0]);south=Math.min(south,p[1]);north=Math.max(north,p[1]);}
+      if(gl){const top=Math.min(160,document.getElementById('map-chrome').getBoundingClientRect().bottom+20);gl.fitBounds([[west,south],[east,north]],{padding:{top,bottom:240,left:30,right:90},maxZoom:16,duration:400});}
+      else leaflet.fitBounds([[south,west],[north,east]],{paddingTopLeft:[24,100],paddingBottomRight:[80,220],maxZoom:16});
+    }
+    function updateLocation(point){if(autoPending){++locationRequest;autoPending=false;$('locate').disabled=false;}geo={...point};drawLocation();onLocation?.(geo);}
     function changeStyle(style) {
       if(!STYLES[style])return;desired=style;if(!gl)return;ready=false;
       const version=++styleVersion;clearTimeout(styleTimer);
@@ -94,7 +118,7 @@
       gl.touchZoomRotate.enableRotation();
       gl.addControl(new maplibregl.AttributionControl({compact:false,customAttribution:'<a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a> \u00b7 <a href="https://openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a>'}),'bottom-left');
       gl.on('style.load',()=>{ready=true;clearTimeout(styleTimer);overlays();if($('status-text').textContent===t("\u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430 \u043a\u0430\u0440\u0442\u044b\u2026"))status('');});
-      gl.on('movestart',()=>{++viewVersion;});gl.on('moveend',persist);gl.on('rotate',()=>{$('compass-arrow').style.transform=`rotate(${-gl.getBearing()}deg)`;});
+      gl.on('movestart',event=>{++viewVersion;if(event?.originalEvent)quietMove=false;});gl.on('moveend',persist);gl.on('rotate',()=>{$('compass-arrow').style.transform=`rotate(${-gl.getBearing()}deg)`;});
       gl.on('click',async e=>{
         const layers=['maply-clusters','maply-pins'].filter(id=>gl.getLayer(id));
         if(Date.now()<heldUntil)return;
@@ -115,7 +139,7 @@
       if(gl){gl.remove();gl=null;}if(!window.L)throw error;
       $('map').replaceChildren();leaflet=L.map('map',{zoomControl:false,tapHold:true,worldCopyJump:true,minZoom:3,maxZoom:19}).setView([start.lat,start.lng],start.zoom);
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'\u00a9 <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'}).addTo(leaflet);layer=L.layerGroup().addTo(leaflet);
-      leaflet.on('movestart',()=>{++viewVersion;});leaflet.on('moveend',persist);leaflet.on('click',onClick);leaflet.on('contextmenu',e=>onLongPress(e.latlng));
+      leaflet.on('movestart',()=>{++viewVersion;});leaflet.on('dragstart',()=>{quietMove=false;});leaflet.on('moveend',persist);leaflet.on('click',onClick);leaflet.on('contextmenu',e=>onLongPress(e.latlng));
       $('compass').disabled=true;ready=true;status('');notify(t("\u0420\u0435\u0437\u0435\u0440\u0432\u043d\u0430\u044f \u043a\u0430\u0440\u0442\u0430 \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442 \u0431\u0435\u0437 \u043f\u043e\u0432\u043e\u0440\u043e\u0442\u0430. \u041f\u0440\u043e\u0432\u0435\u0440\u044c \u0438\u043d\u0442\u0435\u0440\u043d\u0435\u0442 \u0438 \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0443 \u0433\u0440\u0430\u0444\u0438\u043a\u0438 \u0432 \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0435."));
     }
     function requestLocation(automatic=false,recenter=true) {
@@ -135,7 +159,7 @@
     $('compass').addEventListener('click',()=>gl?.resetNorth({duration:350}));
     $('zoom-in').addEventListener('click',()=>map.setView([map.getCenter().lat,map.getCenter().lng],Math.min(19,map.getZoom()+1)));
     $('zoom-out').addEventListener('click',()=>map.setView([map.getCenter().lat,map.getCenter().lng],Math.max(3,map.getZoom()-1)));
-    return {map,setEvents,onSelect(fn){pick=fn;},requestLocation,changeStyle,selectPoint(p){selected=p;drawSelection();},location:()=>geo,
+    return {map,setEvents,setRoute,updateLocation,showPlace(value){place=value;drawPlace();},onSelect(fn){pick=fn;},requestLocation,changeStyle,selectPoint(p){selected=p;drawSelection();},location:()=>geo,
       ready:()=>ready,settingsChanged(){if(!getSettings().autoLocate&&autoPending){++locationRequest;autoPending=false;$('locate').disabled=false;}if(desired!==getStyle())changeStyle(getStyle());}};
   }
   window.MaplyMap={create};
