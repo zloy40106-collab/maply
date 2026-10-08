@@ -12,10 +12,10 @@
   <link rel="icon" type="image/png" href="/api/icon?size=192">
   <link rel="apple-touch-icon" href="/api/icon?size=192">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="/style.css?v=maply-filters-1">
+  <link rel="stylesheet" href="/style.css?v=maply-ui-2">
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.js"></script>
-  <script defer src="/app.js?v=maply-filters-1"></script>
+  <script defer src="/app.js?v=maply-ui-2"></script>
 </head>
 <body>
   <div id="map" aria-label="Карта дорожных событий"></div>
@@ -23,6 +23,15 @@
     <a class="brand" href="/" aria-label="Maply, главная"><span class="brand-mark">M</span>Maply</a>
     <button id="account" class="compact" type="button">Войти</button>
   </header>
+  <section class="filter-shell" aria-label="Выбор дорожных событий">
+    <div class="filter-heading">
+      <div class="group-switch" role="group" aria-label="Тип данных">
+        <button type="button" class="group-button selected" data-group="all" aria-pressed="true">Все</button>
+        <button type="button" class="group-button" data-group="events" aria-pressed="false">События</button>
+        <button type="button" class="group-button" data-group="infrastructure" aria-pressed="false">Инфраструктура</button>
+      </div>
+      <button id="reset-filters" class="reset-filters" type="button" aria-label="Сбросить фильтры" title="Сбросить фильтры" hidden>×</button>
+    </div>
   <nav id="event-filters" class="event-filters" aria-label="Фильтр дорожных событий">
     <button type="button" class="filter-button selected" data-filter="all" aria-pressed="true">Все</button>
     <button type="button" class="filter-button" data-filter="accident" aria-pressed="false"><span aria-hidden="true">🚗</span> Аварии</button>
@@ -31,19 +40,19 @@
     <button type="button" class="filter-button" data-filter="pothole" aria-pressed="false"><span aria-hidden="true">🕳️</span> Ямы</button>
     <button type="button" class="filter-button" data-filter="custom" aria-pressed="false"><span aria-hidden="true">📍</span> Своя метка</button>
   </nav>
+  </section>
   <div id="status" class="status" role="status" aria-live="polite">Загрузка карты…</div>
   <div class="map-tools">
-    <button id="locate" type="button" aria-label="Показать моё местоположение" title="Моё местоположение">◎</button>
-    <button id="refresh" type="button" aria-label="Обновить метки" title="Обновить метки">↻</button>
+    <button id="locate" type="button" aria-label="Показать моё местоположение" title="Моё местоположение"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg></button>
+    <button id="refresh" type="button" aria-label="Обновить метки" title="Обновить метки"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M19 11a7 7 0 0 0-12-4L4 10m1 3a7 7 0 0 0 12 4l3-3"/></svg><span class="tool-caption">Обновить</span></button>
   </div>
   <div id="placement" class="placement" hidden>
     <p>Нажми на карту в месте события</p>
     <button id="cancel-placement" type="button">Отмена</button>
   </div>
   <footer class="bottom-bar">
-    <p aria-live="polite" aria-atomic="true"><span id="count">0</span> <span id="count-caption">меток в этой области</span> <span class="dot">·</span> <span id="filter-caption">все события</span></p>
-    <button id="add" class="primary" type="button">＋ Добавить метку</button>
-    <button id="install" class="install" type="button" hidden>Установить Maply</button>
+    <p class="map-summary" aria-live="polite" aria-atomic="true"><span id="count">0</span> <span id="count-caption">меток в этой области</span><span id="filter-caption" class="sr-only">все события</span></p>
+    <button id="add" class="add-fab" type="button" aria-label="Добавить метку" title="Добавить метку: нажми + или удерживай место на карте">+</button>
   </footer>
   <dialog id="auth-dialog" aria-labelledby="auth-title">
     <div class="dialog-heading"><h1 id="auth-title">Вход в Maply</h1><button class="close" data-close="auth-dialog" aria-label="Закрыть" type="button">×</button></div>
@@ -56,6 +65,7 @@
       <button id="auth-submit" class="primary" type="submit">Войти</button>
       <button id="auth-switch" class="text-button" type="button">Нет аккаунта? Зарегистрироваться</button>
     </form>
+    <button id="install" class="install" type="button" hidden>Установить Maply</button>
     <p id="auth-message" class="message" role="status"></p>
   </dialog>
   <dialog id="pin-dialog" aria-labelledby="pin-title">
