@@ -14,7 +14,7 @@
       engine.setEvents(lastDisplayed.map(p=>({...p,maplyOpacity:s.fadeOld&&C.aged(p)?.58:1})));
       const count=lastDisplayed.length,last=count%10,two=count%100;
       $('count').textContent=String(count);$('count-caption').textContent=window.MaplyI18n.countCaption(count);
-      $('empty-state').hidden=!loaded||count>0||!navigator.onLine;
+      $('empty-state').hidden=true;
       const current=card.current();if(current){const updated=pins.find(p=>p.id===current.id);if(!updated||!lastDisplayed.some(p=>p.id===current.id))card.close();else card.update(updated,pending.has(current.id));}
     }
     function showStatus(){status(pins.length===500?t("\u041f\u043e\u043a\u0430\u0437\u0430\u043d\u044b 500 \u043f\u043e\u0441\u043b\u0435\u0434\u043d\u0438\u0445 \u0441\u043e\u0431\u044b\u0442\u0438\u0439. \u041f\u0440\u0438\u0431\u043b\u0438\u0437\u044c \u043a\u0430\u0440\u0442\u0443, \u0447\u0442\u043e\u0431\u044b \u0443\u0432\u0438\u0434\u0435\u0442\u044c \u0431\u043e\u043b\u044c\u0448\u0435."):'');}
